@@ -72,6 +72,10 @@
                         <li><a href="/blog/index.html">blog</a></li>
                             
                         
+                            
+                        <li><a href="/about/index.html">about</a></li>
+                            
+                        
                     </ul>
                 </nav>
                 </div>
@@ -238,7 +242,7 @@ desperate). We also want the chord to be played in arpeggio.</p>
 <span class="nf">fade</span> <span class="n">speed</span> <span class="ow">=</span> <span class="n">exp</span> <span class="o">.</span> <span class="p">(</span><span class="o">*</span> <span class="n">speed</span><span class="p">)</span> <span class="o">.</span> <span class="p">(</span><span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">))</span>
 
 <span class="c1">-- |Plays a fading note with given waveform.</span>
-<span class="nf">fadingNote</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span> <span class="ow">-&gt;</span> <span class="kt">Double</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">fadingNote</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="p">(</span><span class="kt">Time</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span><span class="p">)</span> <span class="ow">-&gt;</span> <span class="kt">Double</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
 <span class="nf">fadingNote</span> <span class="n">n</span> <span class="n">wave</span> <span class="n">fadeSpeed</span> <span class="ow">=</span> <span class="n">amp</span> <span class="p">(</span><span class="n">fade</span> <span class="n">fadeSpeed</span><span class="p">)</span> <span class="p">(</span><span class="n">wave</span> <span class="p">(</span><span class="n">midiNoteToFreq</span> <span class="n">n</span><span class="p">))</span>
 
 <span class="c1">-- |Plays a note with a nice timbre. Mixes slowly fading square wave with rapidly fading sine.</span>
