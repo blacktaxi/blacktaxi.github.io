@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>reverse microwave: M-type vs ICFPC 2013</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link href='/media/global-f67a1b8c9bc24880efc6abefb193e349.css' rel='stylesheet' type='text/css' />
+
+
+    </head>
+    <body>
+        <div class="main">
+        <div class="page-header">
+            <header class="clearfix">
+                <h1 class="site-title"><a href="/">reverse microwave</a></h1>
+                <span class="site-subtitle">the</span>
+                <div class="site-nav">
+                <nav>
+                    <ul>
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        <li><a href="/blog/index.html">blog</a></li>
+                            
+                        
+                    </ul>
+                </nav>
+                </div>
+            </header>
+        </div>
+        <div class="page-content">
+
+                <article>
+    <header class="post-header">
+        <h1><a href="/blog/2013/08/29/icfpc2013">M-type vs ICFPC 2013</a></h1>
+        <p class="meta">29 Aug 2013 in <a href="/tag/programming.html" rel="tag">programming</a>, <a href="/tag/icfpc.html" rel="tag">icfpc</a> • <a href="/blog/2013/08/29/icfpc2013">∞</a></p>
+    </header>
+    <hr/>
+
+    <div class="post-content">
+        <p>This was the first ICFPC ever for me, and for other guys on the team as well. Amazing experience, and I&rsquo;m very thankful to the organizers and to my friends who came to hack with me. It was a weekend full of fun and constant deadline pressure. I haven&rsquo;t been solving non-trivial algorithmic problems since I can&rsquo;t remember, and this experience was a great reminder.</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+    <span class="nt">&quot;contestScore&quot;</span><span class="p">:</span> <span class="mi">547</span><span class="p">,</span>
+    <span class="nt">&quot;lightningScore&quot;</span><span class="p">:</span> <span class="mi">249</span><span class="p">,</span>
+    <span class="nt">&quot;trainingScore&quot;</span><span class="p">:</span> <span class="mi">117</span><span class="p">,</span>
+    <span class="nt">&quot;mismatches&quot;</span><span class="p">:</span> <span class="mi">171</span><span class="p">,</span>
+    <span class="nt">&quot;numRequests&quot;</span><span class="p">:</span> <span class="mi">5066</span><span class="p">,</span>
+    <span class="nt">&quot;cpuTotalTime&quot;</span><span class="p">:</span> <span class="mf">4384.762</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><a href="http://labs.skbkontur.ru/icfpc2013/Index/0109#info">Complete results breakdown</a>.</p>
+
+<p>We scored 249 in the lightning round and 547 overall. It isn&rsquo;t a great result, but it&rsquo;s probably not too bad. We could do a bit better if we had some more time &ndash; in hindsight, we spent much time doing things that are not worth it. But on a larger scale I think our solution was just not good enough.</p>
+
+<p>The source code for our solution is <a href="https://github.com/blacktaxi/icfpc2013">here</a>.</p>
+
+<h3>Links:</h3>
+
+<ul>
+<li>  <a href="http://icfpc2013.cloudapp.net/">Official contest website</a></li>
+<li>  <a href="http://labs.skbkontur.ru/icfpc2013/stats">Unofficial (croudsourced) scoreboard</a> &ndash; if you have participated, you should upload your results (<code>myproblems.json</code>) here to complete the scoreboard.</li>
+<li>  An <a href="http://irorin.org/icfpc2013_irori.tar.gz">interesting solution (1460 pts)</a> by irori in about 20kb of Haskell code</li>
+</ul>
+
+<figure><img src="/media/2013-08-29-icfpc2013/snap.jpg""><figcaption>Last hour of contest</figcaption></figure>
+
+<h1>Setup</h1>
+
+<p>We were a team of 3 uni friends who now are professional programmers. During the contest, we had 2 people on average working on the problem. Some minutes after the contest began, we were already on it (mind you, the contest began at 3AM local time.)</p>
+
+<p>At our disposition we had two Core i5 laptops, one Core i5 desktop and one Core 2 Duo laptop.</p>
+
+<p>We chose the F# programming language as our weapon. No particular reason, just the fact that F# is awesome.</p>
+
+<h1>Initial solution</h1>
+
+<p>I&rsquo;m assuming you&rsquo;ve read the <a href="http://icfpc2013.cloudapp.net/">problem description</a>.</p>
+
+<p>The idea of our solution was to run a search over candidate programs that were generated before querying the server for eval. After implementing this basic algorithm for the lightning round, we used the rest of the time to optimize it.</p>
+
+<p>At first, we were generating all programs from a given set of operators that fit exactly in a specified length. We then filtered out programs that weren&rsquo;t using each operator at least once (yes, one of the mistakes we made). The generation function looked like this:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">rec</span> <span class="k">private</span> <span class="n">emit&#39;&#39;</span> <span class="o">=</span> <span class="n">memoize</span> <span class="n">emit&#39;</span>
+<span class="ow">and</span> <span class="k">private</span> <span class="n">emit&#39;</span> <span class="o">(</span><span class="n">len</span><span class="o">,</span> <span class="o">(</span><span class="n">ops</span> <span class="o">:</span> <span class="n">Set</span><span class="o">&lt;</span><span class="n">Op</span><span class="o">&gt;),</span> <span class="o">(</span><span class="n">vars</span> <span class="o">:</span> <span class="n">Set</span><span class="o">&lt;</span><span class="nn">BV</span><span class="p">.</span><span class="n">Name</span><span class="o">&gt;))</span> <span class="o">=</span> <span class="n">seq</span> <span class="o">{</span>
+        <span class="k">match</span> <span class="n">len</span> <span class="k">with</span>
+        <span class="o">|</span> <span class="mi">1</span> <span class="o">-&gt;</span>
+            <span class="k">yield</span> <span class="nn">BV</span><span class="p">.</span><span class="n">Zero</span>
+            <span class="k">yield</span> <span class="nn">BV</span><span class="p">.</span><span class="n">One</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="k">in</span> <span class="n">vars</span> <span class="k">do</span>
+                <span class="k">yield</span> <span class="nn">BV</span><span class="p">.</span><span class="n">Var</span> <span class="n">v</span>
+        <span class="o">|</span> <span class="n">l</span> <span class="o">-&gt;</span>
+            <span class="c1">// tfold can only be emitted on top level</span>
+            <span class="k">let</span> <span class="nv">ops</span><span class="k">&#39;</span> <span class="o">=</span> <span class="nn">Set</span><span class="p">.</span><span class="n">remove</span> <span class="n">TFold</span> <span class="n">ops</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="o">&gt;=</span> <span class="mi">5</span> <span class="k">then</span> 
+                <span class="k">yield</span><span class="o">!</span> <span class="n">emitTFold</span> <span class="n">l</span> <span class="n">ops&#39;</span> <span class="n">vars</span> <span class="o">(</span><span class="nn">Set</span><span class="p">.</span><span class="n">contains</span> <span class="n">TFold</span> <span class="n">ops</span><span class="o">)</span>
+                <span class="k">yield</span><span class="o">!</span> <span class="n">emitFold</span> <span class="n">l</span> <span class="n">ops&#39;</span> <span class="n">vars</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="o">&gt;=</span> <span class="mi">4</span> <span class="k">then</span> <span class="k">yield</span><span class="o">!</span> <span class="n">emitIf</span> <span class="n">l</span> <span class="n">ops&#39;</span> <span class="n">vars</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="o">&gt;=</span> <span class="mi">3</span> <span class="k">then</span> <span class="k">yield</span><span class="o">!</span> <span class="n">emitBinary</span> <span class="n">l</span> <span class="n">ops&#39;</span> <span class="n">vars</span>
+            <span class="k">if</span> <span class="n">l</span> <span class="o">&gt;=</span> <span class="mi">2</span> <span class="k">then</span> <span class="k">yield</span><span class="o">!</span> <span class="n">emitUnary</span> <span class="n">l</span> <span class="n">ops&#39;</span> <span class="n">vars</span>
+    <span class="o">}</span>
+<span class="ow">and</span> <span class="c1">// ...</span>
+</code></pre></div>
+<p>While our &lsquo;player&rsquo; (the part that communicates with the server and implements the solving strategy) wasn&rsquo;t ready yet, I ran the generation to store results on disk so that we can start running as soon as the &lsquo;player&rsquo; is ready.</p>
+
+<p>Our solving strategy was as follows:</p>
+
+<ul>
+<li>  <em>generation</em>: generate all programs for a problem;</li>
+<li>  <em>filtering</em>:
+
+<ul>
+<li> query the server for 256 random inputs;</li>
+<li> throw away all programs whose outputs don&rsquo;t match with what server told us;</li>
+<li> repeat until we have 1 or 0 programs left, or if last filtering run didn&rsquo;t remove any programs (this would mean that we have found a set of equivalent programs);</li>
+</ul></li>
+<li>  <em>submission</em>:
+
+<ul>
+<li> submit a random program from our current list;</li>
+<li> if the server responds with a &lsquo;mismatch&rsquo; &ndash; go back to filtering phase.</li>
+</ul></li>
+</ul>
+
+<p>At problem size 11 generation was already taking several minutes, and at size 12 we hit a brick wall &ndash; it took 30 to 50 minutes each! At this point we decided that we should start running our solver as it was 1.5 hours before the lighthing round deadline. </p>
+
+<p>We managed to solve all problems up to (and including) size 10, and about a half of 11s before the time was up. It was scary to see a &lsquo;mismatch&rsquo; for the first time, but really everything went smoothly &ndash; we didn&rsquo;t fail anything and I can&rsquo;t remember any major mishaps we&rsquo;ve had.</p>
+
+<p>After hour 24 I left the solver running for problems of size 11, and ran the generator for size 12 on another computer (so that next morning we could submit some more solutions) and went to sleep.</p>
+
+<h1>Day 2. Optimizing generation</h1>
+
+<p>Sadly, the generator I left running overnight didn&rsquo;t help much. It only managed to crunch through about 10 problems and then died with OutOfMemoryException. For some of our functions we used System.Collections.Generic.Dictionary-based memoization, which will throw an OOM exception if you put too many elements in it. But even not taking into account memory issues, the generator was excruciatingly slow, so we needed a better solution.</p>
+
+<p>By this time we started thinking about search optimizations based on program structure analysis. For example, <code>(and 0 expr)</code> will always evaluate to <code>0</code> so it doesn&rsquo;t matter what <code>expr</code> actually is: this means we can skip generating the <code>expr</code> subtree entirely.</p>
+
+<p>With our current generation function it was hard to do during the generation process, and filtering programs out after everything is already generated wouldn&rsquo;t give any generation speedup, and that&rsquo;s what we currently needed.</p>
+
+<p>I rewrote the generator to emit all programs given only operator order. It would then put operators in the exact order that was specified, only shuffling around constants and variables from sample to sample. This meant that we now also had to generate all possible operator order sequences, feed them to the generation function and then concatenate all results.</p>
+
+<p>This simplified the code a lot, but more importantly it gave us the ability to put some program structure analysis in it. We were hoping to reduce the amount of programs generated by optimizing generation for obvious <code>if</code>s, <code>and</code>s with <code>0</code>, <code>or</code>s with <code>0xFFFFFFFFFFFFFFFF</code>, <code>fold</code>s with constant lambda, etc. It looked like this:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="c1">// binary</span>
+<span class="o">|</span> <span class="n">And</span> <span class="o">|</span> <span class="n">Or</span> <span class="o">|</span> <span class="n">Xor</span> <span class="o">|</span> <span class="n">Plus</span> <span class="o">-&gt;</span>
+    <span class="k">for</span> <span class="o">[</span><span class="n">rest1</span><span class="o">;</span> <span class="n">rest2</span><span class="o">]</span> <span class="k">in</span> <span class="n">decompList</span> <span class="mi">2</span> <span class="n">rest</span> <span class="k">do</span> <span class="c1">// @TODO</span>
+        <span class="k">for</span> <span class="n">e1</span> <span class="k">in</span> <span class="n">emitForOpOrder</span> <span class="o">(</span><span class="n">rest1</span><span class="o">,</span> <span class="n">inFold</span><span class="o">)</span> <span class="k">do</span>
+            <span class="k">let</span> <span class="nv">e2s</span> <span class="o">=</span>
+                <span class="k">let</span> <span class="nv">all</span> <span class="o">=</span> <span class="n">emitForOpOrder</span> <span class="o">(</span><span class="n">rest2</span><span class="o">,</span> <span class="n">inFold</span><span class="o">)</span>
+                <span class="k">match</span> <span class="n">op</span><span class="o">,</span> <span class="n">e1</span> <span class="k">with</span>
+                <span class="c1">// (and 0 e) -&gt; 0</span>
+                <span class="o">|</span> <span class="n">And</span><span class="o">,</span> <span class="nn">BV</span><span class="p">.</span><span class="n">ConstExpr</span> <span class="mi">0UL</span> <span class="o">-&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">firstOrNone</span> <span class="n">all</span>
+                <span class="o">|</span> <span class="n">Or</span><span class="o">,</span> <span class="nn">BV</span><span class="p">.</span><span class="n">ConstExpr</span> <span class="mi">0</span><span class="n">xFFFFFFFFFFFFFFFFUL</span> <span class="o">-&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">firstOrNone</span> <span class="n">all</span>
+                <span class="o">|</span> <span class="o">_</span> <span class="o">-&gt;</span> <span class="n">all</span>
+            <span class="k">for</span> <span class="n">e2</span> <span class="k">in</span> <span class="n">e2s</span> <span class="k">do</span>
+                <span class="k">yield</span> <span class="n">mapBinary</span> <span class="n">op</span> <span class="n">e1</span> <span class="n">e2</span>
+<span class="c1">// ...</span>
+</code></pre></div>
+<p>(As it turned out, there actually were other clever ways to analyze generated expressions. It&rsquo;s a pity we didn&rsquo;t came up with any of those.)</p>
+
+<p>During generation, we were even trying to evaluate partial expression tree if it could be proven that it is a constant. If it was, then we could make more assumptions about the equivalence of this expression to others. For example, if we know that the condition argument to <code>if0</code> is a constant expression, we can omit generation of either <code>then</code> or <code>else</code> subtree, depending on the conditional value:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="c1">// ...</span>
+<span class="o">|</span> <span class="n">If0</span> <span class="o">-&gt;</span>
+    <span class="c1">// (if1 e1 e2 e3)</span>
+    <span class="k">for</span> <span class="o">[</span><span class="n">rest1</span><span class="o">;</span> <span class="n">rest2</span><span class="o">;</span> <span class="n">rest3</span><span class="o">]</span> <span class="k">in</span> <span class="n">decompList</span> <span class="mi">3</span> <span class="n">rest</span> <span class="k">do</span>
+        <span class="k">for</span> <span class="n">e1</span> <span class="k">in</span> <span class="n">emitForOpOrder</span> <span class="o">(</span><span class="n">rest1</span><span class="o">,</span> <span class="n">inFold</span><span class="o">)</span> <span class="k">do</span>
+            <span class="k">let</span> <span class="nv">e2s</span><span class="o">,</span> <span class="n">e3s</span> <span class="o">=</span>
+                <span class="k">let</span> <span class="nv">e2s</span> <span class="o">=</span> <span class="n">emitForOpOrder</span> <span class="o">(</span><span class="n">rest2</span><span class="o">,</span> <span class="n">inFold</span><span class="o">)</span>
+                <span class="k">let</span> <span class="nv">e3s</span> <span class="o">=</span> <span class="n">emitForOpOrder</span> <span class="o">(</span><span class="n">rest3</span><span class="o">,</span> <span class="n">inFold</span><span class="o">)</span>
+                <span class="k">match</span> <span class="n">e1</span> <span class="k">with</span>
+                <span class="c1">// (if0 0 e2 e3) -&gt; e2</span>
+                <span class="o">|</span> <span class="nn">BV</span><span class="p">.</span><span class="n">ConstExpr</span> <span class="mi">0UL</span> <span class="o">-&gt;</span> <span class="n">e2s</span><span class="o">,</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">firstOrNone</span> <span class="n">e3s</span>
+                <span class="c1">// (if0 1 e2 e3) -&gt; e3</span>
+                <span class="o">|</span> <span class="nn">BV</span><span class="p">.</span><span class="n">ConstExpr</span> <span class="n">x</span> <span class="k">when</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0UL</span> <span class="o">-&gt;</span> <span class="nn">Seq</span><span class="p">.</span><span class="n">firstOrNone</span> <span class="n">e2s</span><span class="o">,</span> <span class="n">e3s</span>
+                <span class="o">|</span> <span class="o">_</span> <span class="o">-&gt;</span> <span class="n">e2s</span><span class="o">,</span> <span class="n">e3s</span>
+            <span class="k">for</span> <span class="n">e2</span> <span class="k">in</span> <span class="n">e2s</span> <span class="k">do</span>
+                <span class="k">for</span> <span class="n">e3</span> <span class="k">in</span> <span class="n">e3s</span> <span class="k">do</span>
+                    <span class="k">yield</span> <span class="nn">BV</span><span class="p">.</span><span class="n">If0</span> <span class="o">(</span><span class="n">e1</span><span class="o">,</span> <span class="n">e2</span><span class="o">,</span> <span class="n">e3</span><span class="o">)</span>
+</code></pre></div>
+<p>We spent most of the day on this, but we weren&rsquo;t getting the speedup we hoped for.</p>
+
+<p>Suddenly, after another rebuild, I noticed that the generation works 10 or even 100 times faster than before. We were happily baffled about this, but didn&rsquo;t do any investigation as we were very tired. It&rsquo;s actually kind of outrageous since 
+I don&rsquo;t remember doing any optimizations before rebuilding.</p>
+
+<p>We settled for hypothesis that I was running a wrong binary the whole time (ugh), but really we cared less about this since with the new speed we could solve the 12s! And we did.</p>
+
+<p>Then, we started trying the 13s, but this time brickwalled on memory usage. Somewhere around this time we began working on program compilation to speed up the filtering, as we figured that the slow part was the evaluation.</p>
+
+<h1>Day 3. Filtering optimization and desperate hacks</h1>
+
+<p>While trying 12s, we noticed that some of the problems took over 3 minutes (of allowed 5) to solve. Even if we could generate the required amount of programs for a 13-size problem in time and fit them all in memory, we might not make it on time while choosing the right one. So now we knew that we had to optimize our filtering stage somehow.</p>
+
+<p>Many optimizations were tried out and implemented this day. Some of us worked on ways to reduce the overall amount of generated programs we get &ndash; less programs means less evaluations means faster filtering. Others tried different approaches to speed up the evaluation of a program.</p>
+
+<p>We tried out three different &lsquo;compilation&rsquo; methods (one of which was the actual compilation to .NET bytecode).</p>
+
+<p>At first, we tried to convert our expression tree into a nested closures: this would work the same as normal expression tree walking, but only with the walking path fixed in a tree of nested closures.</p>
+
+<p>This gave us a speedup of 2x, but it still wasn&rsquo;t enough &ndash; by this time, I think, we had our first failed problem because we didn&rsquo;t make it on time. So then we tried to convert expression trees to <a href="http://en.wikipedia.org/wiki/Reverse_Polish_notation">RPN</a> and evaluate those with a &lsquo;stack machine&rsquo;.</p>
+
+<p>That didn&rsquo;t help much either &ndash; the speed was almost exactly the same. So the next thing to try would be to use F#&rsquo;s quotations to construct the program, and then compile it to an actual function (.NET method). I&rsquo;ve spent several hours on this, as juggling code quotations turned out to be much harder than I thought it would.</p>
+
+<p>Nevertheless, this was actually one of the fun parts of the contest for me, as it is really cool to see an expression tree to be transformed in the actual F# code at runtime, and then compiled to a (probably) very efficient bytecode that should run super fast. Metaprogramming, especially practical metaprogramming &ndash; is fascinating.</p>
+
+<p>The final code for compilation looked like this:</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="k">let</span> <span class="nv">compile</span> <span class="o">(</span><span class="n">expr</span><span class="o">:</span> <span class="nn">BV</span><span class="p">.</span><span class="n">Expr</span><span class="o">)</span> <span class="o">:</span> <span class="o">(</span><span class="kt">uint64</span> <span class="o">-&gt;</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">=</span> 
+    <span class="k">let</span> <span class="nv">st</span><span class="o">,</span> <span class="n">derefSt</span> <span class="o">=</span> <span class="n">variable</span><span class="o">&lt;</span><span class="kt">uint64</span> <span class="bp">[]</span><span class="o">&gt;</span> <span class="s">&quot;st&quot;</span>
+    <span class="k">let</span> <span class="nv">rec</span> <span class="n">compile&#39;</span> <span class="o">(</span><span class="n">expr</span> <span class="o">:</span> <span class="nn">BV</span><span class="p">.</span><span class="n">Expr</span><span class="o">)</span> <span class="o">=</span>
+        <span class="k">match</span> <span class="n">expr</span> <span class="k">with</span>
+        <span class="o">|</span> <span class="n">Zero</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="mi">0UL</span> <span class="o">@@&gt;</span> <span class="o">|</span> <span class="n">One</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="mi">1UL</span> <span class="o">@@&gt;</span>
+        <span class="o">|</span> <span class="n">Var</span> <span class="s">&quot;x&quot;</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">0</span><span class="o">]</span> <span class="o">@@&gt;</span>
+        <span class="o">|</span> <span class="n">Var</span> <span class="s">&quot;v_1&quot;</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">1</span><span class="o">]</span> <span class="o">@@&gt;</span>
+        <span class="o">|</span> <span class="n">Var</span> <span class="s">&quot;v_2&quot;</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">2</span><span class="o">]</span> <span class="o">@@&gt;</span>
+        <span class="o">|</span> <span class="n">Op1</span> <span class="o">(</span><span class="n">op</span><span class="o">,</span> <span class="n">exp</span><span class="o">)</span> <span class="o">-&gt;</span>
+            <span class="k">let</span> <span class="nv">sub</span> <span class="o">=</span> <span class="n">compile&#39;</span> <span class="n">exp</span>
+            <span class="k">match</span> <span class="n">op</span> <span class="k">with</span>
+            <span class="o">|</span> <span class="n">Not</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">~~~(%%</span><span class="n">sub</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">@@&gt;</span>
+            <span class="o">|</span> <span class="n">Shl1</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">(%%</span><span class="n">sub</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">&lt;&lt;&lt;</span> <span class="mi">1</span> <span class="o">@@&gt;</span>
+            <span class="o">|</span> <span class="n">Shr1</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">(%%</span><span class="n">sub</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">1</span> <span class="o">@@&gt;</span>
+            <span class="o">|</span> <span class="n">Shr4</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">(%%</span><span class="n">sub</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">4</span> <span class="o">@@&gt;</span>
+            <span class="o">|</span> <span class="n">Shr16</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">(%%</span><span class="n">sub</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">16</span> <span class="o">@@&gt;</span>
+        <span class="o">|</span> <span class="n">Op2</span> <span class="o">(</span><span class="n">op</span><span class="o">,</span> <span class="n">expr1</span><span class="o">,</span> <span class="n">expr2</span><span class="o">)</span> <span class="o">-&gt;</span>
+            <span class="k">let</span> <span class="nv">sub1</span><span class="o">,</span> <span class="n">sub2</span> <span class="o">=</span> <span class="n">compile&#39;</span> <span class="n">expr1</span><span class="o">,</span> <span class="n">compile&#39;</span> <span class="n">expr2</span>
+            <span class="k">match</span> <span class="n">op</span> <span class="k">with</span>
+            <span class="o">|</span> <span class="n">Xor</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">(%%</span><span class="n">sub1</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">^^^</span> <span class="o">(%%</span><span class="n">sub2</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">@@&gt;</span>
+            <span class="o">|</span> <span class="n">Plus</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">(%%</span><span class="n">sub1</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">+</span> <span class="o">(%%</span><span class="n">sub2</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">@@&gt;</span>
+            <span class="o">|</span> <span class="n">And</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">(%%</span><span class="n">sub1</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">&amp;&amp;&amp;</span> <span class="o">(%%</span><span class="n">sub2</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">@@&gt;</span>
+            <span class="o">|</span> <span class="n">Or</span> <span class="o">-&gt;</span> <span class="o">&lt;@@</span> <span class="o">(%%</span><span class="n">sub1</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">|||</span> <span class="o">(%%</span><span class="n">sub2</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">@@&gt;</span>
+        <span class="o">|</span> <span class="n">If0</span> <span class="o">(</span><span class="n">cond</span><span class="o">,</span> <span class="k">then&#39;</span><span class="o">,</span> <span class="k">else&#39;</span><span class="o">)</span> <span class="o">-&gt;</span>
+            <span class="k">let</span> <span class="nv">c</span><span class="o">,</span> <span class="n">t</span><span class="o">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">compile&#39;</span> <span class="n">cond</span><span class="o">,</span> <span class="n">compile&#39;</span> <span class="k">then&#39;</span><span class="o">,</span> <span class="n">compile&#39;</span> <span class="k">else&#39;</span>
+            <span class="o">&lt;@@</span> <span class="k">if</span> <span class="o">(%%</span><span class="n">c</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">=</span> <span class="mi">0UL</span> <span class="k">then</span> <span class="o">(%%</span><span class="n">t</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="k">else</span> <span class="o">(%%</span><span class="n">e</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">@@&gt;</span>
+        <span class="c1">// ...</span>
+
+    <span class="k">let</span> <span class="nv">inner</span> <span class="o">=</span> <span class="n">compile&#39;</span> <span class="n">expr</span>
+    <span class="k">let</span> <span class="nv">l</span> <span class="o">=</span> <span class="nn">Quotations</span><span class="p">.</span><span class="nn">Expr</span><span class="p">.</span><span class="n">Lambda</span><span class="o">(</span><span class="n">st</span><span class="o">,</span> <span class="n">inner</span><span class="o">)</span>
+    <span class="k">let</span> <span class="nv">compiled</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">CompileUntyped</span><span class="bp">()()</span> <span class="o">:?&gt;</span> <span class="kt">uint64</span> <span class="bp">[]</span> <span class="o">-&gt;</span> <span class="kt">uint64</span>
+    <span class="o">(</span><span class="k">fun</span> <span class="n">x</span> <span class="o">-&gt;</span> <span class="n">compiled</span> <span class="o">[|</span><span class="n">x</span><span class="o">;</span> <span class="mi">0UL</span><span class="o">;</span> <span class="mi">0UL</span><span class="o">|])</span>
+</code></pre></div>
+<p>We had to use untyped quotations, couldn&rsquo;t get it to work with typed. We also had to put all the type annotations manually, as we were getting invalid cast exceptions at runtime &ndash; I guess the type inference didn&rsquo;t work here as one would expect. We used FSharp.PowerPack for quotation compilation, and it didn&rsquo;t support local mutable vars, so we had to use an array for that. What would we need mutability for? <code>fold</code>, of course!</p>
+<div class="highlight"><pre><code class="language-fsharp" data-lang="fsharp"><span class="c1">// ...</span>
+<span class="o">|</span> <span class="n">Fold</span> <span class="o">(</span><span class="n">inputExpr</span><span class="o">,</span> <span class="n">initExpr</span><span class="o">,</span> <span class="o">_,</span> <span class="o">_,</span> <span class="n">lambdaExpr</span><span class="o">)</span> <span class="o">-&gt;</span>
+    <span class="k">let</span> <span class="nv">input</span><span class="o">,</span> <span class="n">init</span> <span class="o">=</span> <span class="n">compile&#39;</span> <span class="n">inputExpr</span><span class="o">,</span> <span class="n">compile&#39;</span> <span class="n">initExpr</span>
+    <span class="k">let</span> <span class="nv">lambda</span> <span class="o">=</span> <span class="n">compile&#39;</span> <span class="n">lambdaExpr</span>
+
+    <span class="o">&lt;@@</span>
+        <span class="k">let</span> <span class="o">(</span><span class="n">input</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">),</span> <span class="o">(</span><span class="n">init</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span> <span class="o">=</span> <span class="o">%%</span><span class="n">input</span><span class="o">,</span> <span class="o">%%</span><span class="n">init</span>
+
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">2</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="n">init</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">1</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(</span><span class="n">input</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">&amp;&amp;&amp;</span> <span class="mi">0</span><span class="n">xffUL</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">2</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(%%</span><span class="n">lambda</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">1</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(</span><span class="n">input</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">8</span><span class="o">)</span> <span class="o">&amp;&amp;&amp;</span> <span class="mi">0</span><span class="n">xffUL</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">2</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(%%</span><span class="n">lambda</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">1</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(</span><span class="n">input</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">16</span><span class="o">)</span> <span class="o">&amp;&amp;&amp;</span> <span class="mi">0</span><span class="n">xffUL</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">2</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(%%</span><span class="n">lambda</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">1</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(</span><span class="n">input</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">24</span><span class="o">)</span> <span class="o">&amp;&amp;&amp;</span> <span class="mi">0</span><span class="n">xffUL</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">2</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(%%</span><span class="n">lambda</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">1</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(</span><span class="n">input</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">32</span><span class="o">)</span> <span class="o">&amp;&amp;&amp;</span> <span class="mi">0</span><span class="n">xffUL</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">2</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(%%</span><span class="n">lambda</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">1</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(</span><span class="n">input</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">40</span><span class="o">)</span> <span class="o">&amp;&amp;&amp;</span> <span class="mi">0</span><span class="n">xffUL</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">2</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(%%</span><span class="n">lambda</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">1</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(</span><span class="n">input</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">48</span><span class="o">)</span> <span class="o">&amp;&amp;&amp;</span> <span class="mi">0</span><span class="n">xffUL</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">2</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(%%</span><span class="n">lambda</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">1</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(</span><span class="n">input</span> <span class="o">&gt;&gt;&gt;</span> <span class="mi">56</span><span class="o">)</span> <span class="o">&amp;&amp;&amp;</span> <span class="mi">0</span><span class="n">xffUL</span>
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">2</span><span class="o">]</span> <span class="o">&lt;-</span> <span class="o">(%%</span><span class="n">lambda</span> <span class="o">:</span> <span class="kt">uint64</span><span class="o">)</span>
+
+        <span class="o">(%%</span><span class="n">derefSt</span> <span class="o">:</span> <span class="kt">uint64</span> <span class="bp">[]</span><span class="o">).[</span><span class="mi">2</span><span class="o">]</span>
+    <span class="o">@@&gt;</span>
+</code></pre></div>
+<p>As you can see, the loop is fully unrolled, hardcore-ugly style. The PowerPack quotation compiler didn&rsquo;t support <code>for</code> loops, and <code>Array.fold</code> was too slow. </p>
+
+<p>Miserably enough, this compilation turned out to be just as slow as the two previous attempts. It was very fast for expressions without <code>fold</code>, though. We abandoned this idea and moved on.</p>
+
+<p>Thankfully, after staring at the evaluation code to find any other miniscule optimizations I could do, I noticed that the variable environment that is threaded around during recursive expression walking was designed to accept any number of variables and to adhere to lexical scope rules. But a <code>\BV</code> program can have 3 variables at most.</p>
+
+<p>So this was done &ndash; I removed the actual <code>Map&lt;_, _&gt;</code> that was containing the evaluation context, and replaced it with a 3-tuple: <code>(x, v_1, v_2)</code>. It speeded up the evaluation! But, only to the speed we had with compiled expression trees. So, not a great success.</p>
+
+<h1>Finale</h1>
+
+<p>We ran out of ideas and were running out of time. Only then we realized, that the program <em>doesn&rsquo;t have</em> to be of exact length, and <em>doesn&rsquo;t have</em> to contain each operator at least once.</p>
+
+<p>So with this knowledge, our next desperate attempt would be to try and solve big problems with small programs. At first I tried to run our solver on about 20 of those manually, and most of the time it succeeded. So, we decided we should automate this and send it to battle. I should say, that by this point a &lsquo;failed&rsquo; problem was a normal thing, since we started feeling we didn&rsquo;t have anything to lose.</p>
+
+<p>I implemented a strategy like this for our solver:</p>
+
+<ul>
+<li>  from the list of all problems, choose the easiest unsolved;</li>
+<li>  try to solve it with a program of size 8;</li>
+<li>  if that didn&rsquo;t work &ndash; try bigger size, up to 14 for problems without <code>fold</code> and up to 16 for problems with <code>fold</code>;</li>
+<li>  repeat until every problem is either solved or failed.</li>
+</ul>
+
+<p>The &lsquo;easiness&rsquo; of a problem was determined, aside from it&rsquo;s size, by the amount of operators it had, and by which operators. For example, <code>fold</code> problems were easier to solve, as there was a lot less possible combinations, because <code>fold</code> takes up a lot of program space.</p>
+
+<p>I left this running on two computers and went to sleep. In the morning I checked the status, and saw a jolly good +100 points.</p>
+
+    </div>
+
+    <hr/>
+    <footer class="post-footer">
+    
+    <h4>
+        No related posts.
+    </h4>
+    
+    </footer>
+<article>
+        </div>
+
+        <div class="page-footer">
+            <footer class="clearfix">
+                <div class="contacts">
+                    <a class="link-feed" href="http://reversemicrowave.me/atom.xml">Atom feed</a></br>
+                </div>
+                <div class="copyleft">
+                    Copyright © 2012-2014 Sergey Yavnyi
+                </div>
+            </footer>
+        </div>
+        </div>
+
+        <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-43760927-1', 'reversemicrowave.me');
+  ga('send', 'pageview');
+
+</script>
+        
+    </body>
+</html>

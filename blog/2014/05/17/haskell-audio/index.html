@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>reverse microwave: Simplistic audio synthesis with Haskell</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link href='/media/global-f67a1b8c9bc24880efc6abefb193e349.css' rel='stylesheet' type='text/css' />
+
+
+    </head>
+    <body>
+        <div class="main">
+        <div class="page-header">
+            <header class="clearfix">
+                <h1 class="site-title"><a href="/">reverse microwave</a></h1>
+                <span class="site-subtitle">the</span>
+                <div class="site-nav">
+                <nav>
+                    <ul>
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        <li><a href="/blog/index.html">blog</a></li>
+                            
+                        
+                    </ul>
+                </nav>
+                </div>
+            </header>
+        </div>
+        <div class="page-content">
+
+                <article>
+    <header class="post-header">
+        <h1><a href="/blog/2014/05/17/haskell-audio">Simplistic audio synthesis with Haskell</a></h1>
+        <p class="meta">17 May 2014 in <a href="/tag/programming.html" rel="tag">programming</a>, <a href="/tag/haskell.html" rel="tag">haskell</a>, <a href="/tag/music.html" rel="tag">music</a> • <a href="/blog/2014/05/17/haskell-audio">∞</a></p>
+    </header>
+    <hr/>
+
+    <div class="post-content">
+        <p>In an effort to practice Haskell, I&rsquo;ve been working on <a href="https://github.com/blacktaxi/inversion">a program</a>
+that generates guitar chords for a given chord &ldquo;specification&rdquo;.</p>
+
+<p>To be able to have instant feedback (and also when I didn&rsquo;t have an instrument available) I&rsquo;ve also
+created a tool for playing back the generated chords. While I was working in a Windows environment,
+I could use the system MIDI synth for this, so playing chords was easy.</p>
+
+<p>Lately, however, I&rsquo;ve been spending more time in OS X. Unfortunately, OS X doesn&rsquo;t ship with a
+system-available MIDI synth, and I couldn&rsquo;t find any lightweight options for being able to play
+couple of notes. So given my very relaxed requirements for this, I decided the most lightweight
+option would be to make a simple synth.</p>
+
+<h2>Playing sounds in OS X</h2>
+
+<p>First, we need to be able to play back arbitrary audio data. There&rsquo;s the wonderful <code>CoreAudio</code> and
+<code>Audio Units</code> and a lot of other cool things, but given my laziness and limited time I
+decided to go with the simplest option again:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">brew install sox
+</code></pre></div>
+<p><a href="http://sox.sourceforge.net/">SoX</a> is a universal audio-tinkering tool. Apart from features like
+audio format conversion, audio processing effect, noise removal, etc. SoX can also play audio from
+<code>stdin</code>:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">cat /dev/urandom <span class="p">|</span> play -traw -r8000 -c2 -b8 -u - <span class="c"># play some stereo noise</span>
+</code></pre></div>
+<p>So what was left is to generate the actual audio data.</p>
+
+<h2>Functional audio signals</h2>
+
+<p>Let&rsquo;s define some types first:</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kr">type</span> <span class="kt">Amplitude</span> <span class="ow">=</span> <span class="kt">Double</span>
+<span class="kr">type</span> <span class="kt">Time</span> <span class="ow">=</span> <span class="kt">Double</span>
+<span class="kr">type</span> <span class="kt">Signal</span> <span class="ow">=</span> <span class="kt">Time</span> <span class="ow">-&gt;</span> <span class="kt">Amplitude</span>
+</code></pre></div>
+<p>We will try to use a purely-functional model of an audio signal &ndash; a function of
+time point to a wave amplitude. We&rsquo;ll see how good that will work out.</p>
+
+<p>(While the choice of <code>Double</code> for audio wave amplitude seems pretty obvious, it&rsquo;s not as much for
+the <code>Time</code>. I&rsquo;m confident it&rsquo;s actually a pretty horrible choice for a serious audio synthesis, but
+it will probably be OK in my case.)</p>
+
+<p>Let&rsquo;s define some basic audio signals:</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="c1">-- |A sound from outer space.</span>
+<span class="nf">silence</span> <span class="ow">::</span> <span class="kt">Signal</span>
+<span class="nf">silence</span> <span class="ow">=</span> <span class="n">const</span> <span class="mi">0</span>
+
+<span class="c1">-- |Oscillate in a form of a sine wave at &#39;freq&#39; Hz.</span>
+<span class="nf">sine</span> <span class="ow">::</span> <span class="kt">Time</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">sine</span> <span class="n">freq</span> <span class="n">t</span> <span class="ow">=</span> <span class="n">sin</span> <span class="o">$</span> <span class="n">freq</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">t</span>
+
+<span class="c1">-- |Square wave at &#39;freq&#39; Hz.</span>
+<span class="nf">square</span> <span class="ow">::</span> <span class="kt">Time</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">square</span> <span class="n">freq</span> <span class="n">t</span> <span class="ow">=</span> <span class="kr">if</span> <span class="n">odd</span> <span class="n">i</span> <span class="kr">then</span> <span class="mf">1.0</span> <span class="kr">else</span> <span class="o">-</span><span class="mf">1.0</span>
+    <span class="kr">where</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="kr">_</span><span class="p">)</span> <span class="ow">=</span> <span class="n">properFraction</span> <span class="p">(</span><span class="n">t</span> <span class="o">*</span> <span class="n">freq</span><span class="p">)</span>
+</code></pre></div>
+<p>Looks pretty straightforward. Don&rsquo;t forget that functions are always <a href="http://en.wikipedia.org/wiki/Currying">curried</a>
+in Haskell, so <code>sine 440</code> is a value of type <code>Time -&gt; Amplitude</code>, for which we have defined a
+synonym &ndash; <code>Signal</code>. So <code>sine 440</code> will return a <code>Signal</code>.</p>
+
+<p>Now, let&rsquo;s define a couple of audio signal combinators so we can compose several sounds in a chord:</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="c1">-- |Multiplies the signal by a fixed value.</span>
+<span class="nf">volume</span> <span class="ow">::</span> <span class="kt">Amplitude</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">volume</span> <span class="n">x</span> <span class="n">s</span> <span class="n">t</span> <span class="ow">=</span> <span class="n">s</span> <span class="n">t</span> <span class="o">*</span> <span class="n">x</span>
+
+<span class="c1">-- |Mixes two signals together by adding amplitudes.</span>
+<span class="nf">mix</span> <span class="ow">::</span> <span class="kt">Signal</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">mix</span> <span class="n">x</span> <span class="n">y</span> <span class="n">t</span> <span class="ow">=</span> <span class="n">x</span> <span class="n">t</span> <span class="o">+</span> <span class="n">y</span> <span class="n">t</span>
+
+<span class="c1">-- |Mixes several signals together by adding amplitudes.</span>
+<span class="nf">mixMany</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Signal</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">mixMany</span> <span class="n">signals</span> <span class="ow">=</span> <span class="n">foldr</span> <span class="n">mix</span> <span class="n">silence</span> <span class="n">signals</span>
+</code></pre></div>
+<p>This gives us the ability to mix different signals, and also in arbitrary proportions:</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="c1">-- mix one quarter of 440 Hz sine with one half of 660Hz square</span>
+<span class="nf">mix</span> <span class="p">(</span><span class="n">volume</span> <span class="mf">0.25</span> <span class="o">$</span> <span class="n">sine</span> <span class="mi">440</span><span class="p">)</span> <span class="p">(</span><span class="n">volume</span> <span class="mf">0.5</span> <span class="o">$</span> <span class="n">square</span> <span class="mi">660</span><span class="p">)</span>
+</code></pre></div>
+<p>Great, now let&rsquo;s create a signal that&rsquo;s constituted of actual notes mixed together. First, we&rsquo;ll
+need to be able to calculate oscillation frequency for a given note. We&rsquo;ll use General MIDI
+integers to denote notes:</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="c1">-- |Calculates an oscillation frequency for a MIDI note number, in an equally tempered scale.</span>
+<span class="nf">midiNoteToFreq</span> <span class="ow">::</span> <span class="p">(</span><span class="kt">Floating</span> <span class="n">a</span><span class="p">)</span> <span class="ow">=&gt;</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="n">a</span>
+<span class="nf">midiNoteToFreq</span> <span class="n">n</span> <span class="ow">=</span>
+    <span class="n">f0</span> <span class="o">*</span> <span class="p">(</span><span class="n">a</span> <span class="o">**</span> <span class="p">(</span><span class="n">fromIntegral</span> <span class="n">n</span> <span class="o">-</span> <span class="n">midiA4</span><span class="p">))</span>
+    <span class="kr">where</span>
+        <span class="n">a</span> <span class="ow">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="mf">12.0</span><span class="p">)</span>
+        <span class="n">f0</span> <span class="ow">=</span> <span class="mf">440.0</span> <span class="c1">-- A-4 in an ETS is 440 Hz.</span>
+        <span class="n">midiA4</span> <span class="ow">=</span> <span class="mi">69</span> <span class="c1">-- A-4 in MIDI is 69.</span>
+</code></pre></div>
+<p>And now, to generate signal for a complete chord:</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="c1">-- |Mixes given notes into a single chord signal.</span>
+<span class="nf">chord</span> <span class="ow">::</span> <span class="p">[</span><span class="kt">Int</span><span class="p">]</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">chord</span> <span class="n">notes</span> <span class="ow">=</span> <span class="n">mixMany</span> <span class="o">$</span> <span class="n">map</span> <span class="p">(</span><span class="n">volume</span> <span class="mf">0.2</span> <span class="o">.</span> <span class="n">sine</span> <span class="o">.</span> <span class="n">midiNoteToFreq</span><span class="p">)</span> <span class="n">notes</span>
+</code></pre></div>
+<p>Looks very clear and concise. Awesome!</p>
+
+<h2>Rendering a signal</h2>
+
+<p>To hear a <code>Signal</code> we need to sample it and feed it to <code>sox</code> for playback. All we actually need to
+do is to evaluate the signal at each sampling point and convert it to a value that
+<code>sox</code> will understand.</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kr">import</span> <span class="nn">Data.Int</span> <span class="p">(</span><span class="kt">Int16</span> <span class="p">(</span><span class="o">..</span><span class="p">))</span> <span class="c1">-- we&#39;re going to use Int16 as output signal format</span>
+
+<span class="c1">-- |Limits the signal&#39;s amplitude to not leave specified range.</span>
+<span class="nf">clip</span> <span class="ow">::</span> <span class="kt">Amplitude</span> <span class="ow">-&gt;</span> <span class="kt">Amplitude</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">clip</span> <span class="n">low</span> <span class="n">high</span> <span class="n">s</span> <span class="ow">=</span> <span class="n">max</span> <span class="n">low</span> <span class="o">.</span> <span class="n">min</span> <span class="n">high</span> <span class="o">.</span> <span class="n">s</span>
+
+<span class="c1">-- |Samples the signal over a specified time range with given sample rate.</span>
+<span class="nf">render</span> <span class="ow">::</span> <span class="kt">Time</span> <span class="ow">-&gt;</span> <span class="kt">Time</span> <span class="ow">-&gt;</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span> <span class="ow">-&gt;</span> <span class="p">[</span><span class="kt">Int16</span><span class="p">]</span>
+<span class="nf">render</span> <span class="n">startT</span> <span class="n">endT</span> <span class="n">sampleRate</span> <span class="n">s</span> <span class="ow">=</span>
+    <span class="p">[</span> <span class="n">int16signal</span> <span class="p">(</span><span class="n">sample</span> <span class="o">*</span> <span class="n">samplePeriod</span><span class="p">)</span> <span class="o">|</span> <span class="n">sample</span> <span class="ow">&lt;-</span> <span class="p">[</span><span class="mi">0</span><span class="o">..</span><span class="n">totalSamples</span><span class="p">]</span> <span class="p">]</span>
+    <span class="kr">where</span>
+        <span class="n">int16signal</span> <span class="ow">=</span> <span class="p">(</span><span class="n">toInt16</span> <span class="o">.</span> <span class="n">clipped</span><span class="p">)</span> <span class="c1">-- a function of Time -&gt; Int16</span>
+        <span class="n">toInt16</span> <span class="n">x</span> <span class="ow">=</span> <span class="p">(</span><span class="n">truncate</span> <span class="p">(</span><span class="n">minSig</span> <span class="o">+</span> <span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">maxSig</span> <span class="o">-</span> <span class="n">minSig</span><span class="p">))))</span>
+        <span class="n">minSig</span> <span class="ow">=</span> <span class="n">fromIntegral</span> <span class="p">(</span><span class="n">minBound</span> <span class="ow">::</span> <span class="kt">Int16</span><span class="p">)</span>
+        <span class="n">maxSig</span> <span class="ow">=</span> <span class="n">fromIntegral</span> <span class="p">(</span><span class="n">maxBound</span> <span class="ow">::</span> <span class="kt">Int16</span><span class="p">)</span>
+        <span class="n">clipped</span> <span class="ow">=</span> <span class="p">(</span><span class="n">clip</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">)</span> <span class="mf">1.0</span> <span class="n">s</span><span class="p">)</span> <span class="c1">-- the same signal clipped to stay within [-1; 1]</span>
+        <span class="n">totalSamples</span> <span class="ow">=</span> <span class="p">(</span><span class="n">endT</span> <span class="o">-</span> <span class="n">startT</span><span class="p">)</span> <span class="o">/</span> <span class="n">samplePeriod</span> <span class="c1">-- total number of samples to render</span>
+        <span class="n">samplePeriod</span> <span class="ow">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">fromIntegral</span> <span class="n">sampleRate</span><span class="p">)</span> <span class="c1">-- time interval between two sample points</span>
+</code></pre></div>
+<p>Now, to actually play a chord we would do something like this:</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="kr">import</span> <span class="nn">Data.Binary</span> <span class="p">(</span><span class="nf">encode</span><span class="p">)</span>
+<span class="kr">import</span> <span class="k">qualified</span> <span class="nn">Data.ByteString.Lazy</span> <span class="k">as</span> <span class="n">BS</span> <span class="p">(</span><span class="n">concat</span><span class="p">,</span> <span class="n">putStr</span><span class="p">)</span>
+
+<span class="nf">main</span> <span class="ow">::</span> <span class="kt">IO</span> <span class="nb">()</span>
+<span class="nf">main</span> <span class="ow">=</span> <span class="kr">do</span>
+    <span class="kt">BS</span><span class="o">.</span><span class="n">putStr</span> <span class="o">$</span> <span class="n">playChord</span> <span class="p">[</span><span class="mi">58</span><span class="p">,</span> <span class="mi">63</span><span class="p">,</span> <span class="mi">67</span><span class="p">,</span> <span class="mi">72</span><span class="p">,</span> <span class="mi">77</span><span class="p">]</span>    
+    <span class="kr">where</span>
+        <span class="n">playChord</span> <span class="n">notes</span> <span class="ow">=</span> 
+            <span class="kr">let</span> <span class="n">rendered</span> <span class="ow">=</span> <span class="n">render</span> <span class="mf">0.0</span> <span class="mf">3.5</span> <span class="mi">44100</span> <span class="o">$</span> <span class="n">chord</span> <span class="n">notes</span>
+            <span class="kr">in</span> <span class="kt">BS</span><span class="o">.</span><span class="n">concat</span> <span class="o">$</span> <span class="n">map</span> <span class="n">encode</span> <span class="n">rendered</span>
+</code></pre></div>
+<p>and then pipe that output to <code>sox</code>:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span>./play-chords <span class="p">|</span> play -ts16 -c1 -r44100 -x -
+</code></pre></div>
+<p><audio src="/media/2014-05-17-haskell-audio/test1.mp3"" controls="controls" preload="none" /></p>
+
+<h2>Pimping up the sound</h2>
+
+<p>Okay, we now can play chords, but the sound is boring. We want the voices to reminisce (at least
+a bit) the sound of guitar, or any other musical instrument for that matter (we&rsquo;re really
+desperate). We also want the chord to be played in arpeggio.</p>
+
+<p>Let&rsquo;s make the note signals fading, and also mix different waveforms and see if that helps:</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="c1">-- |Controls the amplitude of one signal by value of another signal.</span>
+<span class="nf">amp</span> <span class="ow">::</span> <span class="kt">Signal</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">amp</span> <span class="n">x</span> <span class="n">y</span> <span class="n">t</span> <span class="ow">=</span> <span class="n">x</span> <span class="n">t</span> <span class="o">*</span> <span class="n">y</span> <span class="n">t</span>
+
+<span class="c1">-- |Emits a control signal for an exponential fade out.</span>
+<span class="nf">fade</span> <span class="ow">::</span> <span class="kt">Time</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">fade</span> <span class="n">speed</span> <span class="ow">=</span> <span class="n">exp</span> <span class="o">.</span> <span class="p">(</span><span class="o">*</span> <span class="n">speed</span><span class="p">)</span> <span class="o">.</span> <span class="p">(</span><span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">))</span>
+
+<span class="c1">-- |Plays a fading note with given waveform.</span>
+<span class="nf">fadingNote</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span> <span class="ow">-&gt;</span> <span class="kt">Double</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">fadingNote</span> <span class="n">n</span> <span class="n">wave</span> <span class="n">fadeSpeed</span> <span class="ow">=</span> <span class="n">amp</span> <span class="p">(</span><span class="n">fade</span> <span class="n">fadeSpeed</span><span class="p">)</span> <span class="p">(</span><span class="n">wave</span> <span class="p">(</span><span class="n">midiNoteToFreq</span> <span class="n">n</span><span class="p">))</span>
+
+<span class="c1">-- |Plays a note with a nice timbre. Mixes slowly fading square wave with rapidly fading sine.</span>
+<span class="nf">niceNote</span> <span class="ow">::</span> <span class="kt">Int</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">niceNote</span> <span class="n">n</span> <span class="ow">=</span> <span class="n">mix</span> <span class="n">voice1</span> <span class="n">voice2</span>
+    <span class="kr">where</span>
+        <span class="n">voice1</span> <span class="ow">=</span> <span class="n">volume</span> <span class="mf">0.3</span> <span class="o">$</span> <span class="n">fadingNote</span> <span class="n">n</span> <span class="n">square</span> <span class="mf">1.9</span>
+        <span class="n">voice2</span> <span class="ow">=</span> <span class="n">volume</span> <span class="mf">0.7</span> <span class="o">$</span> <span class="n">fadingNote</span> <span class="n">n</span> <span class="n">sine</span> <span class="mf">4.0</span>
+</code></pre></div>
+<p>Now our <code>chord</code> function will look like this:</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">chord</span> <span class="n">notes</span> <span class="ow">=</span> <span class="n">mixMany</span> <span class="o">$</span> <span class="n">map</span> <span class="p">(</span><span class="n">volume</span> <span class="mf">0.2</span> <span class="o">.</span> <span class="n">niceNote</span><span class="p">)</span> <span class="n">notes</span>
+</code></pre></div>
+<p>This sounds a lot better, something akin to <a href="http://en.wikipedia.org/wiki/General_Instrument_AY-3-8910">AY</a>.</p>
+
+<p>And now for arpeggio, we&rsquo;ll define another signal combinator, that will allow us to change the time
+at which the signal starts:</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="c1">-- |Delays a signal by a given time.</span>
+<span class="nf">delay</span> <span class="ow">::</span> <span class="kt">Time</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span> <span class="ow">-&gt;</span> <span class="kt">Signal</span>
+<span class="nf">delay</span> <span class="n">delayTime</span> <span class="n">s</span> <span class="n">t</span> <span class="ow">=</span> <span class="kr">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="n">delayTime</span> <span class="kr">then</span> <span class="n">s</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">delayTime</span><span class="p">)</span> <span class="kr">else</span> <span class="mf">0.0</span>
+</code></pre></div>
+<p>With this addition, our chord function transforms into this:</p>
+<div class="highlight"><pre><code class="language-haskell" data-lang="haskell"><span class="nf">chord</span> <span class="n">notes</span> <span class="ow">=</span> <span class="n">mixMany</span> <span class="n">noteWaves</span>
+    <span class="kr">where</span>
+        <span class="n">noteWaves</span> <span class="ow">=</span> <span class="n">zipWith</span> <span class="n">noteInArpeggio</span> <span class="p">[</span><span class="mi">0</span><span class="o">..</span><span class="p">]</span> <span class="n">notes</span>
+        <span class="n">noteInArpeggio</span> <span class="n">idx</span> <span class="n">n</span> <span class="ow">=</span> <span class="n">delay</span> <span class="p">(</span><span class="n">fromIntegral</span> <span class="n">idx</span> <span class="o">*</span> <span class="mf">0.05</span><span class="p">)</span> <span class="o">$</span> <span class="n">niceNote</span> <span class="n">n</span>
+</code></pre></div>
+<p>And it sounds like this:</p>
+
+<p><audio src="/media/2014-05-17-haskell-audio/test.mp3"" controls="controls" preload="none" /></p>
+
+<p>The complete source code is on <a href="https://github.com/blacktaxi/inversion/blob/4602dd301baf07a3f3d76992868510d1fbf8d78a/src/Preview.hs">github</a>.</p>
+
+    </div>
+
+    <hr/>
+    <footer class="post-footer">
+    
+    <h4>
+        No related posts.
+    </h4>
+    
+    </footer>
+<article>
+        </div>
+
+        <div class="page-footer">
+            <footer class="clearfix">
+                <div class="contacts">
+                    <a class="link-feed" href="http://reversemicrowave.me/atom.xml">Atom feed</a></br>
+                </div>
+                <div class="copyleft">
+                    Copyright © 2012-2014 Sergey Yavnyi
+                </div>
+            </footer>
+        </div>
+        </div>
+
+        <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-43760927-1', 'reversemicrowave.me');
+  ga('send', 'pageview');
+
+</script>
+        
+    </body>
+</html>

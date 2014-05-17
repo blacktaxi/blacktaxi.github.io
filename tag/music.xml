@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+ <title> music</title>
+ <link href="http://reversemicrowave.me/tag/music.xml" rel="self"/>
+ <link href="http://reversemicrowave.me/tag/music.html"/>
+ <updated>2014-05-17T03:06:58+03:00</updated>
+ <id>http://reversemicrowave.me/tag/music.html</id>
+ <author>
+   <name>Sergey Yavnyi</name>
+ </author>
+ 
+ <entry>
+   <title>Simplistic audio synthesis with Haskell</title>
+   <link href="http://reversemicrowave.me/blog/2014/05/17/haskell-audio"/>
+   <updated>2014-05-17T03:06:58+03:00</updated>
+   <id>http://reversemicrowave.me/blog/2014/05/17/haskell-audio</id>
+   <content type="html">&lt;p&gt;In an effort to practice Haskell, I&amp;rsquo;ve been working on &lt;a href=&quot;https://github.com/blacktaxi/inversion&quot;&gt;a program&lt;/a&gt;
+that generates guitar chords for a given chord &amp;ldquo;specification&amp;rdquo;.&lt;/p&gt;
+
+&lt;p&gt;To be able to have instant feedback (and also when I didn&amp;rsquo;t have an instrument available) I&amp;rsquo;ve also
+created a tool for playing back the generated chords. While I was working in a Windows environment,
+I could use the system MIDI synth for this, so playing chords was easy.&lt;/p&gt;
+
+&lt;p&gt;Lately, however, I&amp;rsquo;ve been spending more time in OS X. Unfortunately, OS X doesn&amp;rsquo;t ship with a
+system-available MIDI synth, and I couldn&amp;rsquo;t find any lightweight options for being able to play
+couple of notes. So given my very relaxed requirements for this, I decided the most lightweight
+option would be to make a simple synth.&lt;/p&gt;
+
+&lt;h2&gt;Playing sounds in OS X&lt;/h2&gt;
+
+&lt;p&gt;First, we need to be able to play back arbitrary audio data. There&amp;rsquo;s the wonderful &lt;code&gt;CoreAudio&lt;/code&gt; and
+&lt;code&gt;Audio Units&lt;/code&gt; and a lot of other cool things, but given my laziness and limited time I
+decided to go with the simplest option again:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;brew install sox
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&quot;http://sox.sourceforge.net/&quot;&gt;SoX&lt;/a&gt; is a universal audio-tinkering tool. Apart from features like
+audio format conversion, audio processing effect, noise removal, etc. SoX can also play audio from
+&lt;code&gt;stdin&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;cat /dev/urandom &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; play -traw -r8000 -c2 -b8 -u - &lt;span class=&quot;c&quot;&gt;# play some stereo noise&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;So what was left is to generate the actual audio data.&lt;/p&gt;
+
+&lt;h2&gt;Functional audio signals&lt;/h2&gt;
+
+&lt;p&gt;Let&amp;rsquo;s define some types first:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;kr&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Amplitude&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Double&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Time&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Double&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Time&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Amplitude&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We will try to use a purely-functional model of an audio signal &amp;ndash; a function of
+time point to a wave amplitude. We&amp;rsquo;ll see how good that will work out.&lt;/p&gt;
+
+&lt;p&gt;(While the choice of &lt;code&gt;Double&lt;/code&gt; for audio wave amplitude seems pretty obvious, it&amp;rsquo;s not as much for
+the &lt;code&gt;Time&lt;/code&gt;. I&amp;rsquo;m confident it&amp;rsquo;s actually a pretty horrible choice for a serious audio synthesis, but
+it will probably be OK in my case.)&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s define some basic audio signals:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;c1&quot;&gt;-- |A sound from outer space.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;silence&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;silence&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;-- |Oscillate in a form of a sine wave at &amp;#39;freq&amp;#39; Hz.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;sine&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Time&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;sine&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;freq&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sin&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;freq&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;2.0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;-- |Square wave at &amp;#39;freq&amp;#39; Hz.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;square&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Time&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;square&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;freq&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;odd&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;then&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1.0&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;1.0&lt;/span&gt;
+    &lt;span class=&quot;kr&quot;&gt;where&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;_&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properFraction&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;freq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Looks pretty straightforward. Don&amp;rsquo;t forget that functions are always &lt;a href=&quot;http://en.wikipedia.org/wiki/Currying&quot;&gt;curried&lt;/a&gt;
+in Haskell, so &lt;code&gt;sine 440&lt;/code&gt; is a value of type &lt;code&gt;Time -&amp;gt; Amplitude&lt;/code&gt;, for which we have defined a
+synonym &amp;ndash; &lt;code&gt;Signal&lt;/code&gt;. So &lt;code&gt;sine 440&lt;/code&gt; will return a &lt;code&gt;Signal&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Now, let&amp;rsquo;s define a couple of audio signal combinators so we can compose several sounds in a chord:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;c1&quot;&gt;-- |Multiplies the signal by a fixed value.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;volume&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Amplitude&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;volume&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;-- |Mixes two signals together by adding amplitudes.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;mix&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;mix&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;-- |Mixes several signals together by adding amplitudes.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;mixMany&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;mixMany&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;signals&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;foldr&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mix&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;silence&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;signals&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This gives us the ability to mix different signals, and also in arbitrary proportions:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;c1&quot;&gt;-- mix one quarter of 440 Hz sine with one half of 660Hz square&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;mix&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;volume&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.25&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sine&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;440&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;volume&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.5&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;square&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;660&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Great, now let&amp;rsquo;s create a signal that&amp;rsquo;s constituted of actual notes mixed together. First, we&amp;rsquo;ll
+need to be able to calculate oscillation frequency for a given note. We&amp;rsquo;ll use General MIDI
+integers to denote notes:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;c1&quot;&gt;-- |Calculates an oscillation frequency for a MIDI note number, in an equally tempered scale.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;midiNoteToFreq&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Floating&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;midiNoteToFreq&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;f0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fromIntegral&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;midiA4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+    &lt;span class=&quot;kr&quot;&gt;where&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;1.0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;12.0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;f0&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;440.0&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;-- A-4 in an ETS is 440 Hz.&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;midiA4&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;69&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;-- A-4 in MIDI is 69.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And now, to generate signal for a complete chord:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;c1&quot;&gt;-- |Mixes given notes into a single chord signal.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;chord&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;chord&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;notes&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mixMany&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;volume&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sine&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;midiNoteToFreq&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;notes&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Looks very clear and concise. Awesome!&lt;/p&gt;
+
+&lt;h2&gt;Rendering a signal&lt;/h2&gt;
+
+&lt;p&gt;To hear a &lt;code&gt;Signal&lt;/code&gt; we need to sample it and feed it to &lt;code&gt;sox&lt;/code&gt; for playback. All we actually need to
+do is to evaluate the signal at each sampling point and convert it to a value that
+&lt;code&gt;sox&lt;/code&gt; will understand.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Data.Int&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int16&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;-- we&amp;#39;re going to use Int16 as output signal format&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;-- |Limits the signal&amp;#39;s amplitude to not leave specified range.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;clip&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Amplitude&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Amplitude&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;clip&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;low&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;high&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;max&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;low&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;min&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;high&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;-- |Samples the signal over a specified time range with given sample rate.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;render&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Time&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Time&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;Int16&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;render&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;startT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sampleRate&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;int16signal&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sample&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;samplePeriod&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sample&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;&amp;lt;-&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;totalSamples&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;kr&quot;&gt;where&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;int16signal&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;toInt16&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;clipped&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;-- a function of Time -&amp;gt; Int16&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;toInt16&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;truncate&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;minSig&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1.0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;2.0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;maxSig&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;minSig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))))&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;minSig&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fromIntegral&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;minBound&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int16&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;maxSig&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fromIntegral&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;maxBound&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int16&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;clipped&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;clip&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;1.0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1.0&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;-- the same signal clipped to stay within [-1; 1]&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;totalSamples&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;endT&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;startT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;samplePeriod&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;-- total number of samples to render&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;samplePeriod&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1.0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fromIntegral&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sampleRate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;-- time interval between two sample points&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now, to actually play a chord we would do something like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Data.Binary&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;encode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;qualified&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;Data.ByteString.Lazy&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BS&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;putStr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;IO&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;do&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;BS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;putStr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;playChord&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;58&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;63&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;67&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;72&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;77&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;    
+    &lt;span class=&quot;kr&quot;&gt;where&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;playChord&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;notes&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; 
+            &lt;span class=&quot;kr&quot;&gt;let&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rendered&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;render&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.0&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;3.5&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;44100&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;chord&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;notes&lt;/span&gt;
+            &lt;span class=&quot;kr&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;BS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;concat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;encode&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rendered&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;and then pipe that output to &lt;code&gt;sox&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./play-chords &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; play -ts16 -c1 -r44100 -x -
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;audio src=&quot;/media/2014-05-17-haskell-audio/test1.mp3&quot;&quot; controls=&quot;controls&quot; preload=&quot;none&quot; /&gt;&lt;/p&gt;
+
+&lt;h2&gt;Pimping up the sound&lt;/h2&gt;
+
+&lt;p&gt;Okay, we now can play chords, but the sound is boring. We want the voices to reminisce (at least
+a bit) the sound of guitar, or any other musical instrument for that matter (we&amp;rsquo;re really
+desperate). We also want the chord to be played in arpeggio.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s make the note signals fading, and also mix different waveforms and see if that helps:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;c1&quot;&gt;-- |Controls the amplitude of one signal by value of another signal.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;amp&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;amp&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;x&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;y&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;-- |Emits a control signal for an exponential fade out.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;fade&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Time&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;fade&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;speed&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;exp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;speed&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mf&quot;&gt;1.0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;-- |Plays a fading note with given waveform.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;fadingNote&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Double&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;fadingNote&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;wave&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fadeSpeed&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;amp&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fade&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fadeSpeed&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;wave&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;midiNoteToFreq&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;-- |Plays a note with a nice timbre. Mixes slowly fading square wave with rapidly fading sine.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;niceNote&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Int&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;niceNote&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mix&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;voice1&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;voice2&lt;/span&gt;
+    &lt;span class=&quot;kr&quot;&gt;where&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;voice1&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;volume&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.3&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fadingNote&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;square&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1.9&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;voice2&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;volume&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.7&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fadingNote&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sine&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;4.0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now our &lt;code&gt;chord&lt;/code&gt; function will look like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;nf&quot;&gt;chord&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;notes&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mixMany&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;map&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;volume&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;niceNote&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;notes&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This sounds a lot better, something akin to &lt;a href=&quot;http://en.wikipedia.org/wiki/General_Instrument_AY-3-8910&quot;&gt;AY&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;And now for arpeggio, we&amp;rsquo;ll define another signal combinator, that will allow us to change the time
+at which the signal starts:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;c1&quot;&gt;-- |Delays a signal by a given time.&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;delay&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;::&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Time&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Signal&lt;/span&gt;
+&lt;span class=&quot;nf&quot;&gt;delay&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;delayTime&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;delayTime&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;then&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;t&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;delayTime&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;With this addition, our chord function transforms into this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span class=&quot;nf&quot;&gt;chord&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;notes&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mixMany&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;noteWaves&lt;/span&gt;
+    &lt;span class=&quot;kr&quot;&gt;where&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;noteWaves&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zipWith&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;noteInArpeggio&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;notes&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;noteInArpeggio&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;delay&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fromIntegral&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;idx&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.05&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;$&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;niceNote&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;And it sounds like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;audio src=&quot;/media/2014-05-17-haskell-audio/test.mp3&quot;&quot; controls=&quot;controls&quot; preload=&quot;none&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The complete source code is on &lt;a href=&quot;https://github.com/blacktaxi/inversion/blob/4602dd301baf07a3f3d76992868510d1fbf8d78a/src/Preview.hs&quot;&gt;github&lt;/a&gt;.&lt;/p&gt;
+</content>
+ </entry>
+ 
+ <entry>
+   <title>Better bass sound with convolution reverb</title>
+   <link href="http://reversemicrowave.me/blog/2012/09/10/bass-ir-stretching"/>
+   <updated>2012-09-10T03:06:58+03:00</updated>
+   <id>http://reversemicrowave.me/blog/2012/09/10/bass-ir-stretching</id>
+   <content type="html">&lt;p&gt;If you have some experience in home recording, you probably know about &lt;a href=&quot;http://en.wikipedia.org/wiki/Convolution_reverb&quot;&gt;convolution reverbs&lt;/a&gt; and &lt;a href=&quot;http://trystan.org/press/?p=194&quot;&gt;guitar cabinet simulation&lt;/a&gt; software and related techniques.&lt;/p&gt;
+
+&lt;p&gt;If you don&amp;rsquo;t, I strongly recommend to learn about that because you can do some really cool stuff with convolution reverbs, and a lot of the time (especially given a good &lt;a href=&quot;http://en.wikipedia.org/wiki/Convolution_reverb#Creation_of_impulse_responses&quot;&gt;impulse response&lt;/a&gt;) they sound really good.&lt;/p&gt;
+
+&lt;figure&gt;&lt;img src=&quot;/media/2012-09-10-bass-ir-stretching/20100320-20100320-DSC_09921.jpg&quot;&gt;&lt;figcaption&gt;My old pal Val rocks his bass&lt;/figcaption&gt;&lt;/figure&gt;
+
+&lt;p&gt;I use convolution reverbs to simulate guitar and bass cabinets and for ambience. To get the right tone (in my case, I was aiming for a deep and roomy, I might even say &amp;ldquo;that raw bass tone&amp;rdquo;) might be a painful adventure.&lt;/p&gt;
+
+&lt;p&gt;Often you can just try several impulses and some will fit right away. But sometimes you go through your whole library, try different combinations and even try EQ&amp;#39;ing the result afterwards but it still doesn&amp;rsquo;t sound right. For me, personally, impulse responses often sound too harsh or tinny &amp;ndash; in other words, have too much high frequency response.&lt;/p&gt;
+
+&lt;p&gt;In such case, there&amp;rsquo;s one thing that almost always works for me: &lt;strong&gt;stretching the impulse response&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h1&gt;How do you do it&lt;/h1&gt;
+
+&lt;p&gt;Stretching the impulse response is literally as simple. Most convolution reverb plugins have a dedicated control for this. If the one you use doesn&amp;rsquo;t &amp;ndash; just open the impulse response wave in your audio editor and shift it&amp;rsquo;s pitch (without preserving it&amp;rsquo;s length!) lower several tones, or as much as you like.&lt;/p&gt;
+
+&lt;p&gt;The amount of stretching required might vary &amp;ndash; depending on the sound you&amp;rsquo;re going after and depending on initial impulse response. From my experience I rarely go over 1.6 times stretch, but I don&amp;rsquo;t see the reason to set any limits here.&lt;/p&gt;
+
+&lt;figure class=&#39;normalsize&#39;&gt;&lt;img src=&quot;/media/2012-09-10-bass-ir-stretching/stretch1.PNG&quot;&gt;&lt;figcaption&gt;The Trim/Gain/Stretch impulse modifier in Reaper&amp;rsquo;s ReaVerb plugin.&lt;/figcaption&gt;&lt;/figure&gt;
+
+&lt;p&gt;In &lt;a href=&quot;http://reaper.fm/&quot;&gt;Reaper&lt;/a&gt;, which happens to be the &lt;a href=&quot;http://en.wikipedia.org/wiki/Digital_audio_workstation&quot;&gt;DAW&lt;/a&gt; of my choice, it looks just like in the picture. Reaper has a built-in convolution reverb, the ReaVerb. It can do impulse stretching and has zero-latency mode, so it&amp;rsquo;s pretty cool.&lt;/p&gt;
+
+&lt;h1&gt;Audio samples&lt;/h1&gt;
+
+&lt;p&gt;I have a bass which doesn&amp;rsquo;t sound very good on it&amp;rsquo;s own, and I don&amp;rsquo;t even make up to it with my playing, hehe. Usually I just record it directly, maybe with some equalisation and compression afterwards, but I don&amp;rsquo;t like how it sounds that way &amp;ndash; &amp;ldquo;thin&amp;rdquo;. With some sound processing I can make it bearable. &lt;/p&gt;
+
+&lt;p&gt;I like the somewhat raw and &amp;ldquo;mean&amp;rdquo; bass sound, something alike to the sound on &lt;a href=&quot;http://en.wikipedia.org/wiki/Eatin&amp;#x27;_Dust&quot;&gt;Fu Manchu &amp;ndash; Eatin&amp;#39; Dust&lt;/a&gt; album. Something with low resonance and a good amount of grit and crunch.&lt;/p&gt;
+
+&lt;p&gt;My bass signal chain is as follows:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;  a &lt;em&gt;guitar&lt;/em&gt; overdrive/distortion pedal (&lt;a href=&quot;http://www.fulltone.com/products/gt500&quot;&gt;Fulltone GT-500&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;  audio interface&lt;/li&gt;
+&lt;li&gt;  amp sim plugin (&lt;a href=&quot;http://lepouplugins.blogspot.com/2009/08/hybrit-series.html&quot;&gt;LePou HyBrit&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;  convolution reverb&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;em&gt;(I realize that my processing chain might be the reason of such a thin bass sound since it&amp;rsquo;s more suited to a guitar.)&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s hear the samples:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;Normal cabinet impulse:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;audio src=&quot;/media/2012-09-10-bass-ir-stretching/normal.mp3&quot;&quot; controls=&quot;controls&quot; preload=&quot;none&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Sounds somewhat thin and boring.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;Stretched impulse:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;audio src=&quot;/media/2012-09-10-bass-ir-stretching/stretched.mp3&quot;&quot; controls=&quot;controls&quot; preload=&quot;none&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now this sounds completely different!&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;Complete mix:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;audio src=&quot;/media/2012-09-10-bass-ir-stretching/mix.mp3&quot;&quot; controls=&quot;controls&quot; preload=&quot;none&quot; /&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;A little theory&lt;/h2&gt;
+
+&lt;p&gt;How does a big cabinet differs from a smaller one? It has bigger box and bigger speakers.&lt;/p&gt;
+
+&lt;p&gt;Bigger speakers can emit lower frequencies, and probably have less higher frequencies in their frequency spectrum. Bigger box might be more subtle. Bigger box means that it takes more time for a sound wave to travel from one end of the box to another. You could imagine the cabinet&amp;rsquo;s box like a small room with wooden walls, and when the speaker makes a sound, it starts to travel around this &amp;lsquo;room&amp;rsquo;, reflecting from the walls back and forth.&lt;/p&gt;
+
+&lt;figure&gt;&lt;img src=&quot;/media/2012-09-10-bass-ir-stretching/enlarge-your-cab.png&quot;&gt;&lt;figcaption&gt;Make your AmPlug sound like it&amp;rsquo;s a speakerwall.&lt;/figcaption&gt;&lt;/figure&gt;
+
+&lt;p&gt;This process of a sound wave travelling inside a cabinet box is called &lt;a href=&quot;http://en.wikipedia.org/wiki/Reverberation&quot;&gt;reverberation&lt;/a&gt;, and it is largely similar to the same processes happening inside concert halls.&lt;/p&gt;
+
+&lt;p&gt;It might seem insignificant, as the box is so small so the sound travels inside it instantly. But what&amp;rsquo;s also different is that because the box is so small the reflections don&amp;rsquo;t decay so much and are heard louder when they travel back.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;(A guitar cabinet&amp;rsquo;s box arguably makes a huge contribution to the final sound.)&lt;/em&gt;&lt;/p&gt;
+
+&lt;p&gt;So if you want to have a sound of a bigger cabinet, you want the speakers to have their frequency spectrum shifted to the bottom (so they sound as bigger speakers), and you want the reverberation inside a box to be more spacious and the resonance peaks on the box&amp;rsquo;s frequency spectrum to be on the lower side as well.&lt;/p&gt;
+
+&lt;p&gt;This is exactly what will happen if you stretch the impulse response.&lt;/p&gt;
+
+&lt;figure class=&#39;normalsize&#39;&gt;&lt;img src=&quot;/media/2012-09-10-bass-ir-stretching/noise-normal.PNG&quot;&gt;&lt;figcaption&gt;Test signal (a click) convolved with given impulse response.&lt;/figcaption&gt;&lt;/figure&gt;
+
+&lt;figure class=&#39;normalsize&#39;&gt;&lt;img src=&quot;/media/2012-09-10-bass-ir-stretching/noise-stretched.PNG&quot;&gt;&lt;figcaption&gt;The same test signal convolved with stretched impulse response. Note how the frequency response has shrunk.&lt;/figcaption&gt;&lt;/figure&gt;
+
+&lt;h2&gt;A note on authenticity of the sound&lt;/h2&gt;
+
+&lt;p&gt;The goal of cabinet simulation is to replicate the exact sound after which the simulation was modelled. If you toy with stretching and other impulse response processing, you won&amp;rsquo;t get the &amp;ldquo;real&amp;rdquo; sound &amp;ndash; you will get a sound of a cabinet that never existed.&lt;/p&gt;
+
+&lt;p&gt;On the other hand this might be a good thing &amp;ndash; what if you want a sound of a 30m tall cabinet with 48&amp;quot; speakers? You probably can&amp;rsquo;t get that kind of sound anyway (at least I don&amp;rsquo;t know if there&amp;rsquo;s a way to verify), but with impulse stretching you at least can pretend to.&lt;/p&gt;
+
+&lt;h2&gt;Not just bass&lt;/h2&gt;
+
+&lt;p&gt;By the way, impulse stretching (and processing in general), can be used not just with bass cabinet impulses. I use this trick when I record guitar tracks, and I imagine it would be cool to try it with a drumset room impulse, for example.&lt;/p&gt;
+
+&lt;p&gt;So feel free to experiment and I&amp;rsquo;m pretty sure you can get some interesting results.&lt;/p&gt;
+</content>
+ </entry>
+ 
+</feed>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>reverse microwave: Another password generation tool</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link href='/media/global-f67a1b8c9bc24880efc6abefb193e349.css' rel='stylesheet' type='text/css' />
+
+
+    </head>
+    <body>
+        <div class="main">
+        <div class="page-header">
+            <header class="clearfix">
+                <h1 class="site-title"><a href="/">reverse microwave</a></h1>
+                <span class="site-subtitle">the</span>
+                <div class="site-nav">
+                <nav>
+                    <ul>
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        <li><a href="/blog/index.html">blog</a></li>
+                            
+                        
+                    </ul>
+                </nav>
+                </div>
+            </header>
+        </div>
+        <div class="page-content">
+
+                <article>
+    <header class="post-header">
+        <h1><a href="/blog/2013/12/19/a-password-generation-tool">Another password generation tool</a></h1>
+        <p class="meta">19 Dec 2013 in <a href="/tag/programming.html" rel="tag">programming</a>, <a href="/tag/python.html" rel="tag">python</a>, <a href="/tag/web.html" rel="tag">web</a> • <a href="/blog/2013/12/19/a-password-generation-tool">∞</a></p>
+    </header>
+    <hr/>
+
+    <div class="post-content">
+        <h2>Motivation</h2>
+
+<p>The Windows 2008 R2 on our build server has been reminding me to change the password for quite some time now. Since I can remember I&rsquo;ve been mostly using relatively short (8-10 characters) randomly generated passwords. While it is not too hard (although takes time) to remember one of those, there&rsquo;s a much better way to generate a password, as was illustrated <a href="http://xkcd.com/936/">in this comic</a>.</p>
+
+<p>Of course, I didn&rsquo;t want to directly follow that suggestion, so I came up with my own requirements for a perfect password (and perfect password generator) and figured it&rsquo;s time for me to finally do the thing I wanted to do for a long time now: to become one of the many who&rsquo;ve created an <em>xkcd-style password generator</em>.</p>
+
+<h2>Development</h2>
+
+<p>It&rsquo;s been over a year since I&rsquo;ve created this <a href="https://gist.github.com/blacktaxi/3694912">gist</a>:</p>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">Python</span> <span class="mf">2.7</span><span class="o">.</span><span class="mi">2</span> <span class="p">(</span><span class="n">default</span><span class="p">,</span> <span class="n">Jun</span> <span class="mi">12</span> <span class="mi">2011</span><span class="p">,</span> <span class="mi">15</span><span class="p">:</span><span class="mi">08</span><span class="p">:</span><span class="mi">59</span><span class="p">)</span> <span class="p">[</span><span class="n">MSC</span> <span class="n">v</span><span class="o">.</span><span class="mi">1500</span> <span class="mi">32</span> <span class="n">bit</span> <span class="p">(</span><span class="n">Intel</span><span class="p">)]</span> <span class="n">on</span> <span class="n">win32</span>
+<span class="n">Type</span> <span class="s">&quot;copyright&quot;</span><span class="p">,</span> <span class="s">&quot;credits&quot;</span> <span class="ow">or</span> <span class="s">&quot;license()&quot;</span> <span class="k">for</span> <span class="n">more</span> <span class="n">information</span><span class="o">.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">random</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">nltk</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">nltk.corpus</span> <span class="kn">import</span> <span class="n">wordnet</span> <span class="k">as</span> <span class="n">wn</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">nouns</span><span class="p">,</span> <span class="n">verbs</span><span class="p">,</span> <span class="n">adjectives</span><span class="p">,</span> <span class="n">adverbs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">wn</span><span class="o">.</span><span class="n">all_synsets</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="n">POS</span><span class="p">))</span> <span class="k">for</span> <span class="n">POS</span> <span class="ow">in</span> <span class="p">[</span><span class="n">wn</span><span class="o">.</span><span class="n">NOUN</span><span class="p">,</span> <span class="n">wn</span><span class="o">.</span><span class="n">VERB</span><span class="p">,</span> <span class="n">wn</span><span class="o">.</span><span class="n">ADJ</span><span class="p">,</span> <span class="n">wn</span><span class="o">.</span><span class="n">ADV</span><span class="p">]]</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">gen_phrase</span><span class="p">(</span><span class="o">*</span><span class="n">pattern</span><span class="p">):</span> <span class="k">return</span> <span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">pattern</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">phrase_to_string</span><span class="p">(</span><span class="n">phrase</span><span class="p">):</span> <span class="k">return</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">lemmas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">phrase</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="k">def</span> <span class="nf">gen_password</span><span class="p">():</span> <span class="k">return</span> <span class="n">phrase_to_string</span><span class="p">(</span><span class="n">gen_phrase</span><span class="p">(</span><span class="n">adverbs</span><span class="p">,</span> <span class="n">adjectives</span><span class="p">,</span> <span class="n">adjectives</span><span class="p">,</span> <span class="n">nouns</span><span class="p">))</span>
+
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gen_password</span><span class="p">()</span>
+<span class="s">&#39;decidedly Noachian autoplastic bag_lady&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gen_password</span><span class="p">()</span>
+<span class="s">&#39;ad_val faithful regimented accordance&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gen_password</span><span class="p">()</span>
+<span class="s">&#39;familiarly votive empty Gadiformes&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gen_password</span><span class="p">()</span>
+<span class="s">&#39;universally surmountable wiry field_mouse&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gen_password</span><span class="p">()</span>
+<span class="s">&#39;deadpan bilingual grandiose oxygen_deficit&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gen_password</span><span class="p">()</span>
+<span class="s">&#39;flip-flap heterozygous unenlightened solitaire&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gen_password</span><span class="p">()</span>
+<span class="s">&#39;only piquant apart Massawa&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gen_password</span><span class="p">()</span>
+<span class="s">&#39;continuously forty-two coarse-haired Israel&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">gen_password</span><span class="p">()</span>
+<span class="s">&#39;actually trigger-happy tactful cobia&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> 
+</code></pre></div>
+<p>This gist is basically the essence of what I wanted to achieve: generate passwords by given template.</p>
+
+<p>Here, I used <a href="http://nltk.org/">nltk</a> (which is a natural language processing toolkit for Python), which, among other things, gives you access to a dozen of structured corpora and dictionaries and whatnot. I used it to pick a random word that is a specific part of speech. As the WordNet dictionary was the better-structured one, and with permissive license, I&rsquo;ve decided to use that.</p>
+
+<p>Now, how do I make a webapp out of it, so I can access it from anywhere? I&rsquo;ve decided that I should finally give <a href="https://developers.google.com/appengine/">Google App Engine</a> a try. Overall, registering an application, downloading the example code, deploying and seeing it running on the appengine server took about 5 minutes, which I think is pretty impressive.</p>
+
+<p>Using nltk and WordNet directly on the appengine seemed overkill, so I didn&rsquo;t do that. Instead, I&rsquo;ve flattened the dictionary and all the metadata to a much simpler structure using the following code:</p>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">nltk</span>
+<span class="kn">from</span> <span class="nn">nltk.corpus</span> <span class="kn">import</span> <span class="n">wordnet</span>
+<span class="k">print</span> <span class="s">&#39;DICTIONARY =&#39;</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span>
+    <span class="p">{</span> <span class="n">pos</span><span class="p">:</span> <span class="p">[</span><span class="n">lemma</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">for</span> <span class="n">synset</span> <span class="ow">in</span> <span class="n">wordnet</span><span class="o">.</span><span class="n">all_synsets</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">wordnet</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">lemma</span> <span class="ow">in</span> <span class="n">synset</span><span class="o">.</span><span class="n">lemmas</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;NOUN&#39;</span><span class="p">,</span> <span class="s">&#39;VERB&#39;</span><span class="p">,</span> <span class="s">&#39;ADJ&#39;</span><span class="p">,</span> <span class="s">&#39;ADV&#39;</span><span class="p">]</span> <span class="p">})</span>
+</code></pre></div>
+<p>As a result, I get a Python dictionary with entries for the parts of speech (nouns, verbs, adjectives and adverbs). Each entry of this dictionary contains a list of words that are of that particular part of speech. The dictionary isn&rsquo;t stored in any kind of database, but instead is imported into the <code>main.py</code>. The source code for the generated dictionary is a massive 2.8Mb <code>.py</code> file.</p>
+
+<p>By storing the dictionary in a Python file I also simplified the deployment a lot, as the download for WordNet dictionary is a separate step which I wasn&rsquo;t sure could be automated. I also think this way it actually makes the web app to load faster, as parsing a huge source file is probably faster than querying WordNet via nltk.</p>
+
+<h2>Result</h2>
+
+<p>Couple hours of work, and voila &ndash; <a href="https://sparemaranta.appspot.com">the app is ready and you can access it here</a>. I realize that the writing is goofy, but my excuse is that I just had to fill all that space that <a href="http://getbootstrap.com/examples/jumbotron-narrow/">this Twitter Bootstrap example template</a> had.</p>
+
+<p>One cool feature my generator has that I haven&rsquo;t seen anywhere else is that the user can set the template from which the password will be generated. For example, the default template is <code>&lt;adj&gt;&lt;noun&gt;&lt;00&gt;</code>, which means that it will concatenate a random adjective, a noun and a two digit number to create a password. Like this: <code>distributionaldisplaycase83</code>. So far the templating capabilities are limited, but I will probably work on expanding them in future.</p>
+
+<p>Of course, in the spirit of all modern things, I&rsquo;ve also made the API to the generator available <a href="https://sparemaranta.appspot.com/api/1/generate">here</a>. The available parameters are <code>template</code> (default is <code>&lt;adj&gt;&lt;noun&gt;&lt;00&gt;</code>) and <code>count</code> (default is <code>5</code>). For example, a <code>GET</code> request to <a href="https://sparemaranta.appspot.com/api/1/generate?template=%3Cadv%3E-%3Cadj%3E-%3Cnoun%3E.%3C000%3E&amp;count=3">https://sparemaranta.appspot.com/api/1/generate?template=&lt;adv&gt;-&lt;adj&gt;-&lt;noun&gt;.&lt;000&gt;&amp;count=3</a> yielded this for me:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;passwords&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;bad-ineligible-staripomoea.837&quot;</span><span class="p">,</span> 
+    <span class="s2">&quot;astern-shortened-conflictofinterest.857&quot;</span><span class="p">,</span> 
+    <span class="s2">&quot;unscientifically-indurate-cithern.760&quot;</span>
+  <span class="p">],</span> 
+  <span class="nt">&quot;template&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;adv&gt;-&lt;adj&gt;-&lt;noun&gt;.&lt;000&gt;&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The successful reply will be a JSON object with two properties: <code>passwords</code>, which will contain a list of generated passwords, and <code>template</code>, which will just echo the received template, for debugging purposes.</p>
+
+<p>Only after I was done, I&rsquo;ve found out that there&rsquo;s already a generator like that: <a href="http://preshing.com/20110811/xkcd-password-generator/">see here</a> (and it&rsquo;s even been covered at <a href="http://lifehacker.com/5830355/xkcd-password-generator-creates-high+security-easy+to+remember-passwords">lifehacker</a>). Interestingly, while it&rsquo;s been over two years, <a href="https://www.google.com.ua/search?q=password+generator">googling for a password generator</a> will still yield the usual <em>mash-some-random-chars-together-style</em> generators on the first page.</p>
+
+<p>It is questionable whether the safety of an online password generator is good enough, even though the data is pumped over a secure connection, but I think it is at least good enough for me. I might make the generator offline, but for now this project has served it&rsquo;s both purposes &ndash; create something useful and have some fun.</p>
+
+<p><a href="https://github.com/blacktaxi/pwdgen">Source code</a></p>
+
+    </div>
+
+    <hr/>
+    <footer class="post-footer">
+    
+    <h4>
+        No related posts.
+    </h4>
+    
+    </footer>
+<article>
+        </div>
+
+        <div class="page-footer">
+            <footer class="clearfix">
+                <div class="contacts">
+                    <a class="link-feed" href="http://reversemicrowave.me/atom.xml">Atom feed</a></br>
+                </div>
+                <div class="copyleft">
+                    Copyright © 2012-2014 Sergey Yavnyi
+                </div>
+            </footer>
+        </div>
+        </div>
+
+        <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-43760927-1', 'reversemicrowave.me');
+  ga('send', 'pageview');
+
+</script>
+        
+    </body>
+</html>

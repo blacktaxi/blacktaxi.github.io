@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>reverse microwave: Embedding a Python REPL in a WPF application</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link href='/media/global-f67a1b8c9bc24880efc6abefb193e349.css' rel='stylesheet' type='text/css' />
+
+
+    </head>
+    <body>
+        <div class="main">
+        <div class="page-header">
+            <header class="clearfix">
+                <h1 class="site-title"><a href="/">reverse microwave</a></h1>
+                <span class="site-subtitle">the</span>
+                <div class="site-nav">
+                <nav>
+                    <ul>
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        <li><a href="/blog/index.html">blog</a></li>
+                            
+                        
+                    </ul>
+                </nav>
+                </div>
+            </header>
+        </div>
+        <div class="page-content">
+
+                <article>
+    <header class="post-header">
+        <h1><a href="/blog/2013/10/18/embedding-a-python-repl-in-a-wpf-application">Embedding a Python REPL in a WPF application</a></h1>
+        <p class="meta">18 Oct 2013 in <a href="/tag/programming.html" rel="tag">programming</a>, <a href="/tag/wpf.html" rel="tag">wpf</a>, <a href="/tag/.net.html" rel="tag">.net</a>, <a href="/tag/c%23.html" rel="tag">c#</a>, <a href="/tag/python.html" rel="tag">python</a> • <a href="/blog/2013/10/18/embedding-a-python-repl-in-a-wpf-application">∞</a></p>
+    </header>
+    <hr/>
+
+    <div class="post-content">
+        <p>Recently I started active development of a WPF application and confronted a problem of UI interaction testing. While I was getting away with testing models and viewmodels relatively painlessly (most of the time anyway), and <a href="http://msdn.microsoft.com/en-us/library/vstudio/jj171026.aspx">there&rsquo;s apparently a way to test animations and other interactions with Blend</a>, I missed the ability to see how well does the UI behave in reaction to change in the domain model.</p>
+
+<p>I initially created a testbed for my application which basically was a window with the UI in question and a panel of buttons, that would launch different actions in model. But that didn&rsquo;t feel right &ndash; JavaScript developers have the luxury of a REPL in the browser, and a possibility to inspect and manipulate UI elements.</p>
+
+<p>Of course, there&rsquo;s the <a href="http://wpfinspector.codeplex.com/">WPF Inspector</a>, which is an amazing tool, and will probably be suffictient for most applications, but it is more mouse-centric than I&rsquo;d like.</p>
+
+<p>After doing some research, I&rsquo;ve found that the easiest option to add an interactive REPL to a WPF application would be to use <a href="http://ironpython.net/">IronPython</a>. It also turned out that there&rsquo;s a great implementation of a &ldquo;REPL-textbox&rdquo; control &ndash; <a href="http://www.nuget.org/packages/IronPythonConsole/">IronPythonConsole</a>. It uses <a href="http://www.nuget.org/packages/AvalonEdit/">AvalonEdit</a> and has syntax highlighting, autocompletion, command history and probably some more cool features.</p>
+
+<h2>Project setup</h2>
+
+<p>You&rsquo;ll need to add to your <code>packages.config</code> and then reference these libraries:</p>
+
+<ul>
+<li>  AvalonEdit</li>
+<li>  IronPython</li>
+<li>  IronPytonConsole</li>
+</ul>
+
+<p>Next, you&rsquo;ll need to put an <code>IronPythonConsoleControl</code> somewhere, either in a separate window, or (as I did it) side-by-side with your application UI:</p>
+<div class="highlight"><pre><code class="language-xml" data-lang="xml"><span class="nt">&lt;Window</span> <span class="na">x:Class=</span><span class="s">&quot;UITestbed.MainWindow&quot;</span>
+        <span class="na">xmlns=</span><span class="s">&quot;http://schemas.microsoft.com/winfx/2006/xaml/presentation&quot;</span>
+        <span class="na">xmlns:x=</span><span class="s">&quot;http://schemas.microsoft.com/winfx/2006/xaml&quot;</span>
+        <span class="na">xmlns:pythonConsoleControl=</span><span class="s">&quot;clr-namespace:PythonConsoleControl;assembly=PythonConsoleControl&quot;</span>
+        <span class="na">UseLayoutRounding=</span><span class="s">&quot;True&quot;</span>
+        <span class="na">WindowStartupLocation=</span><span class="s">&quot;CenterScreen&quot;</span>
+        <span class="na">Loaded=</span><span class="s">&quot;MainWindow_OnLoaded&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;Grid&gt;</span>
+        <span class="nt">&lt;Grid.ColumnDefinitions&gt;</span>
+            <span class="nt">&lt;ColumnDefinition/&gt;</span>
+            <span class="nt">&lt;ColumnDefinition/&gt;</span>
+        <span class="nt">&lt;/Grid.ColumnDefinitions&gt;</span>
+
+        <span class="nt">&lt;pythonConsoleControl:IronPythonConsoleControl</span>
+            <span class="na">x:Name=</span><span class="s">&quot;PythonRepl&quot;</span> <span class="na">Grid.Column=</span><span class="s">&quot;0&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;ContentPresenter</span>
+            <span class="na">x:Name=</span><span class="s">&quot;AppUi&quot;</span> <span class="na">Grid.Column=</span><span class="s">&quot;1&quot;</span><span class="nt">/&gt;</span>
+    <span class="nt">&lt;/Grid&gt;</span>
+<span class="nt">&lt;/Window&gt;</span>
+</code></pre></div>
+<p>You&rsquo;ll need to initialize the Python&rsquo;s REPL environment so you can actually do stuff to your application&rsquo;s objects. This is done by simply adding variables to current Python interpreter environment, which is accessible at <code>IronPythonConsoleControl.Console.ScriptScope</code>. However, it is only safe to do this after the initialization is complete.</p>
+
+<p>So, in your <code>MainWindow</code> class you put this code:</p>
+<div class="highlight"><pre><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="nf">MainWindow</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">InitializeComponent</span><span class="p">();</span>
+
+    <span class="c1">// ... create/initialize your application objects here</span>
+    <span class="k">this</span><span class="p">.</span><span class="n">AppUi</span><span class="p">.</span><span class="n">Content</span> <span class="p">=</span> <span class="cm">/* ... your UI root ... */</span><span class="p">;</span>
+
+    <span class="c1">// is there a better way to set word wrapping on an IronPythonConsoleControl?</span>
+    <span class="k">this</span><span class="p">.</span><span class="n">PythonRepl</span><span class="p">.</span><span class="n">Pad</span><span class="p">.</span><span class="n">Control</span><span class="p">.</span><span class="n">WordWrap</span> <span class="p">=</span> <span class="k">true</span><span class="p">;</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="n">PythonRepl</span><span class="p">.</span><span class="n">Host</span><span class="p">.</span><span class="n">ConsoleCreated</span> <span class="p">+=</span> <span class="n">Host_ConsoleCreated</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">void</span> <span class="nf">Host_ConsoleCreated</span><span class="p">(</span><span class="kt">object</span> <span class="n">sender</span><span class="p">,</span> <span class="n">EventArgs</span> <span class="n">e</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="n">PythonConsole</span><span class="p">.</span><span class="n">Console</span><span class="p">.</span><span class="n">ConsoleInitialized</span> <span class="p">+=</span> <span class="n">Console_ConsoleInitialized</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">void</span> <span class="nf">Console_ConsoleInitialized</span><span class="p">(</span><span class="kt">object</span> <span class="n">sender</span><span class="p">,</span> <span class="n">EventArgs</span> <span class="n">e</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">dynamic</span> <span class="n">env</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">PythonRepl</span><span class="p">.</span><span class="n">Console</span><span class="p">.</span><span class="n">ScriptScope</span><span class="p">;</span>
+    <span class="kt">var</span> <span class="n">engine</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">PythonRepl</span><span class="p">.</span><span class="n">Console</span><span class="p">.</span><span class="n">ScriptScope</span><span class="p">.</span><span class="n">Engine</span><span class="p">;</span>
+
+    <span class="c1">// here you can add objects, methods and namespaces that you want to</span>
+    <span class="c1">// access from the REPL</span>
+    <span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>You can only access the <code>Console</code> property safely after the <code>ConsoleInitialized</code> event has fired, and you can only subscribe to that event after <code>ConsoleCreated</code> event of the console host has fired, hence this complicated subscription.</p>
+
+<h2>Python environment setup</h2>
+
+<p>After you have the access to <code>ScriptScope</code>, the code to add your custom bindings to REPL environment would look pretty simple:</p>
+<div class="highlight"><pre><code class="language-csharp" data-lang="csharp"><span class="c1">// access the domain model from REPL</span>
+<span class="n">env</span><span class="p">.</span><span class="n">model</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">domainModel</span><span class="p">;</span>
+
+<span class="c1">// create a shortcut to certain domain model state</span>
+<span class="n">env</span><span class="p">.</span><span class="n">complicated_situation</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Action</span><span class="p">(</span>
+    <span class="p">()</span> <span class="p">=&gt;</span>
+    <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="n">domainModel</span><span class="p">.</span><span class="n">OpenDocument</span><span class="p">(</span><span class="s">@&quot;C:\\Bacon\\pancakes.mp3&quot;</span><span class="p">);</span>
+
+        <span class="kt">var</span> <span class="n">session</span> <span class="p">=</span> <span class="k">this</span><span class="p">.</span><span class="n">domainModel</span><span class="p">.</span><span class="n">WebService</span><span class="p">.</span><span class="n">Login</span><span class="p">(</span>
+            <span class="s">&quot;J.C. Denton&quot;</span><span class="p">,</span> <span class="s">&quot;bloodshot&quot;</span><span class="p">);</span>
+        <span class="k">this</span><span class="p">.</span><span class="n">domainModel</span><span class="p">.</span><span class="n">WebService</span><span class="p">.</span><span class="n">ProcessDocument</span><span class="p">(</span><span class="n">session</span><span class="p">,</span>
+            <span class="k">this</span><span class="p">.</span><span class="n">domainModel</span><span class="p">.</span><span class="n">CurrentDocument</span><span class="p">);</span>
+        <span class="c1">// etc ...</span>
+    <span class="p">});</span>
+</code></pre></div>
+<p>However, to access your classes and objects, you first need to make the respective namespaces available in the scripting environment. I didn&rsquo;t bother to investigate how this should be done properly, so I just run some <code>import</code>s in the environment:</p>
+<div class="highlight"><pre><code class="language-csharp" data-lang="csharp"><span class="c1">// import namespaces</span>
+<span class="n">engine</span><span class="p">.</span><span class="n">Execute</span><span class="p">(</span><span class="s">&quot;import clr&quot;</span><span class="p">,</span> <span class="n">env</span><span class="p">);</span>
+<span class="k">foreach</span> <span class="p">(</span><span class="kt">var</span> <span class="n">a</span> <span class="k">in</span> <span class="k">new</span><span class="p">[]</span>
+    <span class="p">{</span>    
+        <span class="s">&quot;Acme.TodoList.Model&quot;</span><span class="p">,</span>
+        <span class="s">&quot;Acme.TodoList.Mocks&quot;</span><span class="p">,</span>
+        <span class="s">&quot;Acme.Tools.Tetris&quot;</span><span class="p">,</span>
+        <span class="c1">// etc ...</span>
+    <span class="p">})</span>
+    <span class="c1">// assume namespace and assembly name are the same</span>
+    <span class="n">engine</span><span class="p">.</span><span class="n">Execute</span><span class="p">(</span><span class="n">String</span><span class="p">.</span><span class="n">Format</span><span class="p">(</span><span class="s">&quot;clr.AddReference(&#39;{0}&#39;)\nimport {0}&quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">),</span> <span class="n">env</span><span class="p">);</span>
+<span class="n">engine</span><span class="p">.</span><span class="n">Execute</span><span class="p">(</span><span class="s">&quot;from Acme.TodoList import *&quot;</span><span class="p">,</span> <span class="n">env</span><span class="p">);</span>
+</code></pre></div>
+<p>Now, you can call methods, inspect and modify properties of objects of your domain models and the UI objects as well. It takes time to set up the Python environment for your particular application, but in return you get the ability to iterate much faster.</p>
+
+    </div>
+
+    <hr/>
+    <footer class="post-footer">
+    
+    <h4>
+        No related posts.
+    </h4>
+    
+    </footer>
+<article>
+        </div>
+
+        <div class="page-footer">
+            <footer class="clearfix">
+                <div class="contacts">
+                    <a class="link-feed" href="http://reversemicrowave.me/atom.xml">Atom feed</a></br>
+                </div>
+                <div class="copyleft">
+                    Copyright © 2012-2014 Sergey Yavnyi
+                </div>
+            </footer>
+        </div>
+        </div>
+
+        <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-43760927-1', 'reversemicrowave.me');
+  ga('send', 'pageview');
+
+</script>
+        
+    </body>
+</html>

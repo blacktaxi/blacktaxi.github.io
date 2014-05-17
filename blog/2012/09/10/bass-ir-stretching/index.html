@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>reverse microwave: Better bass sound with convolution reverb</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link href='/media/global-f67a1b8c9bc24880efc6abefb193e349.css' rel='stylesheet' type='text/css' />
+
+
+    </head>
+    <body>
+        <div class="main">
+        <div class="page-header">
+            <header class="clearfix">
+                <h1 class="site-title"><a href="/">reverse microwave</a></h1>
+                <span class="site-subtitle">the</span>
+                <div class="site-nav">
+                <nav>
+                    <ul>
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        <li><a href="/blog/index.html">blog</a></li>
+                            
+                        
+                    </ul>
+                </nav>
+                </div>
+            </header>
+        </div>
+        <div class="page-content">
+
+                <article>
+    <header class="post-header">
+        <h1><a href="/blog/2012/09/10/bass-ir-stretching">Better bass sound with convolution reverb</a></h1>
+        <p class="meta">10 Sep 2012 in <a href="/tag/music.html" rel="tag">music</a>, <a href="/tag/home%20studio.html" rel="tag">home studio</a> • <a href="/blog/2012/09/10/bass-ir-stretching">∞</a></p>
+    </header>
+    <hr/>
+
+    <div class="post-content">
+        <p>If you have some experience in home recording, you probably know about <a href="http://en.wikipedia.org/wiki/Convolution_reverb">convolution reverbs</a> and <a href="http://trystan.org/press/?p=194">guitar cabinet simulation</a> software and related techniques.</p>
+
+<p>If you don&rsquo;t, I strongly recommend to learn about that because you can do some really cool stuff with convolution reverbs, and a lot of the time (especially given a good <a href="http://en.wikipedia.org/wiki/Convolution_reverb#Creation_of_impulse_responses">impulse response</a>) they sound really good.</p>
+
+<figure><img src="/media/2012-09-10-bass-ir-stretching/20100320-20100320-DSC_09921.jpg"><figcaption>My old pal Val rocks his bass</figcaption></figure>
+
+<p>I use convolution reverbs to simulate guitar and bass cabinets and for ambience. To get the right tone (in my case, I was aiming for a deep and roomy, I might even say &ldquo;that raw bass tone&rdquo;) might be a painful adventure.</p>
+
+<p>Often you can just try several impulses and some will fit right away. But sometimes you go through your whole library, try different combinations and even try EQ&#39;ing the result afterwards but it still doesn&rsquo;t sound right. For me, personally, impulse responses often sound too harsh or tinny &ndash; in other words, have too much high frequency response.</p>
+
+<p>In such case, there&rsquo;s one thing that almost always works for me: <strong>stretching the impulse response</strong>.</p>
+
+<h1>How do you do it</h1>
+
+<p>Stretching the impulse response is literally as simple. Most convolution reverb plugins have a dedicated control for this. If the one you use doesn&rsquo;t &ndash; just open the impulse response wave in your audio editor and shift it&rsquo;s pitch (without preserving it&rsquo;s length!) lower several tones, or as much as you like.</p>
+
+<p>The amount of stretching required might vary &ndash; depending on the sound you&rsquo;re going after and depending on initial impulse response. From my experience I rarely go over 1.6 times stretch, but I don&rsquo;t see the reason to set any limits here.</p>
+
+<figure class='normalsize'><img src="/media/2012-09-10-bass-ir-stretching/stretch1.PNG"><figcaption>The Trim/Gain/Stretch impulse modifier in Reaper&rsquo;s ReaVerb plugin.</figcaption></figure>
+
+<p>In <a href="http://reaper.fm/">Reaper</a>, which happens to be the <a href="http://en.wikipedia.org/wiki/Digital_audio_workstation">DAW</a> of my choice, it looks just like in the picture. Reaper has a built-in convolution reverb, the ReaVerb. It can do impulse stretching and has zero-latency mode, so it&rsquo;s pretty cool.</p>
+
+<h1>Audio samples</h1>
+
+<p>I have a bass which doesn&rsquo;t sound very good on it&rsquo;s own, and I don&rsquo;t even make up to it with my playing, hehe. Usually I just record it directly, maybe with some equalisation and compression afterwards, but I don&rsquo;t like how it sounds that way &ndash; &ldquo;thin&rdquo;. With some sound processing I can make it bearable. </p>
+
+<p>I like the somewhat raw and &ldquo;mean&rdquo; bass sound, something alike to the sound on <a href="http://en.wikipedia.org/wiki/Eatin&#x27;_Dust">Fu Manchu &ndash; Eatin&#39; Dust</a> album. Something with low resonance and a good amount of grit and crunch.</p>
+
+<p>My bass signal chain is as follows:</p>
+
+<ul>
+<li>  a <em>guitar</em> overdrive/distortion pedal (<a href="http://www.fulltone.com/products/gt500">Fulltone GT-500</a>)</li>
+<li>  audio interface</li>
+<li>  amp sim plugin (<a href="http://lepouplugins.blogspot.com/2009/08/hybrit-series.html">LePou HyBrit</a>)</li>
+<li>  convolution reverb</li>
+</ul>
+
+<p><em>(I realize that my processing chain might be the reason of such a thin bass sound since it&rsquo;s more suited to a guitar.)</em></p>
+
+<p>Let&rsquo;s hear the samples:</p>
+
+<ul>
+<li><p><strong>Normal cabinet impulse:</strong></p>
+
+<p><audio src="/media/2012-09-10-bass-ir-stretching/normal.mp3"" controls="controls" preload="none" /></p>
+
+<p>Sounds somewhat thin and boring.</p></li>
+<li><p><strong>Stretched impulse:</strong></p>
+
+<p><audio src="/media/2012-09-10-bass-ir-stretching/stretched.mp3"" controls="controls" preload="none" /></p>
+
+<p>Now this sounds completely different!</p></li>
+<li><p><strong>Complete mix:</strong></p>
+
+<p><audio src="/media/2012-09-10-bass-ir-stretching/mix.mp3"" controls="controls" preload="none" /></p></li>
+</ul>
+
+<h2>A little theory</h2>
+
+<p>How does a big cabinet differs from a smaller one? It has bigger box and bigger speakers.</p>
+
+<p>Bigger speakers can emit lower frequencies, and probably have less higher frequencies in their frequency spectrum. Bigger box might be more subtle. Bigger box means that it takes more time for a sound wave to travel from one end of the box to another. You could imagine the cabinet&rsquo;s box like a small room with wooden walls, and when the speaker makes a sound, it starts to travel around this &lsquo;room&rsquo;, reflecting from the walls back and forth.</p>
+
+<figure><img src="/media/2012-09-10-bass-ir-stretching/enlarge-your-cab.png"><figcaption>Make your AmPlug sound like it&rsquo;s a speakerwall.</figcaption></figure>
+
+<p>This process of a sound wave travelling inside a cabinet box is called <a href="http://en.wikipedia.org/wiki/Reverberation">reverberation</a>, and it is largely similar to the same processes happening inside concert halls.</p>
+
+<p>It might seem insignificant, as the box is so small so the sound travels inside it instantly. But what&rsquo;s also different is that because the box is so small the reflections don&rsquo;t decay so much and are heard louder when they travel back.</p>
+
+<p><em>(A guitar cabinet&rsquo;s box arguably makes a huge contribution to the final sound.)</em></p>
+
+<p>So if you want to have a sound of a bigger cabinet, you want the speakers to have their frequency spectrum shifted to the bottom (so they sound as bigger speakers), and you want the reverberation inside a box to be more spacious and the resonance peaks on the box&rsquo;s frequency spectrum to be on the lower side as well.</p>
+
+<p>This is exactly what will happen if you stretch the impulse response.</p>
+
+<figure class='normalsize'><img src="/media/2012-09-10-bass-ir-stretching/noise-normal.PNG"><figcaption>Test signal (a click) convolved with given impulse response.</figcaption></figure>
+
+<figure class='normalsize'><img src="/media/2012-09-10-bass-ir-stretching/noise-stretched.PNG"><figcaption>The same test signal convolved with stretched impulse response. Note how the frequency response has shrunk.</figcaption></figure>
+
+<h2>A note on authenticity of the sound</h2>
+
+<p>The goal of cabinet simulation is to replicate the exact sound after which the simulation was modelled. If you toy with stretching and other impulse response processing, you won&rsquo;t get the &ldquo;real&rdquo; sound &ndash; you will get a sound of a cabinet that never existed.</p>
+
+<p>On the other hand this might be a good thing &ndash; what if you want a sound of a 30m tall cabinet with 48&quot; speakers? You probably can&rsquo;t get that kind of sound anyway (at least I don&rsquo;t know if there&rsquo;s a way to verify), but with impulse stretching you at least can pretend to.</p>
+
+<h2>Not just bass</h2>
+
+<p>By the way, impulse stretching (and processing in general), can be used not just with bass cabinet impulses. I use this trick when I record guitar tracks, and I imagine it would be cool to try it with a drumset room impulse, for example.</p>
+
+<p>So feel free to experiment and I&rsquo;m pretty sure you can get some interesting results.</p>
+
+    </div>
+
+    <hr/>
+    <footer class="post-footer">
+    
+    <h4>
+        No related posts.
+    </h4>
+    
+    </footer>
+<article>
+        </div>
+
+        <div class="page-footer">
+            <footer class="clearfix">
+                <div class="contacts">
+                    <a class="link-feed" href="http://reversemicrowave.me/atom.xml">Atom feed</a></br>
+                </div>
+                <div class="copyleft">
+                    Copyright © 2012-2014 Sergey Yavnyi
+                </div>
+            </footer>
+        </div>
+        </div>
+
+        <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-43760927-1', 'reversemicrowave.me');
+  ga('send', 'pageview');
+
+</script>
+        
+    </body>
+</html>
