@@ -34,7 +34,7 @@ decided to go with the simplest option again:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;brew install sox
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;&lt;a href=&quot;http://sox.sourceforge.net/&quot;&gt;SoX&lt;/a&gt; is a universal audio-tinkering tool. Apart from features like
-audio format conversion, audio processing effect, noise removal, etc. SoX can also play audio from
+audio format conversion, audio processing effects, noise removal, etc. SoX can also play audio from
 &lt;code&gt;stdin&lt;/code&gt;:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;cat /dev/urandom &lt;span class=&quot;p&quot;&gt;|&lt;/span&gt; play -traw -r8000 -c2 -b8 -u - &lt;span class=&quot;c&quot;&gt;# play some stereo noise&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
