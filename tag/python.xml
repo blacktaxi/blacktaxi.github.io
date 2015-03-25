@@ -3,7 +3,7 @@
  <title> python</title>
  <link href="http://reversemicrowave.me/tag/python.xml" rel="self"/>
  <link href="http://reversemicrowave.me/tag/python.html"/>
- <updated>2014-05-17T03:06:58+03:00</updated>
+ <updated>2014-05-16T17:06:58-07:00</updated>
  <id>http://reversemicrowave.me/tag/python.html</id>
  <author>
    <name>Sergey Yavnyi</name>
@@ -11,9 +11,9 @@
  
  <entry>
    <title>Another password generation tool</title>
-   <link href="http://reversemicrowave.me/blog/2013/12/19/a-password-generation-tool"/>
-   <updated>2013-12-19T02:06:58+02:00</updated>
-   <id>http://reversemicrowave.me/blog/2013/12/19/a-password-generation-tool</id>
+   <link href="http://reversemicrowave.me/blog/2013/12/18/a-password-generation-tool"/>
+   <updated>2013-12-18T16:06:58-08:00</updated>
+   <id>http://reversemicrowave.me/blog/2013/12/18/a-password-generation-tool</id>
    <content type="html">&lt;h2&gt;Motivation&lt;/h2&gt;
 
 &lt;p&gt;The Windows 2008 R2 on our build server has been reminding me to change the password for quite some time now. Since I can remember I&amp;rsquo;ve been mostly using relatively short (8-10 characters) randomly generated passwords. While it is not too hard (although takes time) to remember one of those, there&amp;rsquo;s a much better way to generate a password, as was illustrated &lt;a href=&quot;http://xkcd.com/936/&quot;&gt;in this comic&lt;/a&gt;.&lt;/p&gt;
@@ -103,9 +103,9 @@
  
  <entry>
    <title>Embedding a Python REPL in a WPF application</title>
-   <link href="http://reversemicrowave.me/blog/2013/10/18/embedding-a-python-repl-in-a-wpf-application"/>
-   <updated>2013-10-18T03:06:58+03:00</updated>
-   <id>http://reversemicrowave.me/blog/2013/10/18/embedding-a-python-repl-in-a-wpf-application</id>
+   <link href="http://reversemicrowave.me/blog/2013/10/17/embedding-a-python-repl-in-a-wpf-application"/>
+   <updated>2013-10-17T17:06:58-07:00</updated>
+   <id>http://reversemicrowave.me/blog/2013/10/17/embedding-a-python-repl-in-a-wpf-application</id>
    <content type="html">&lt;p&gt;Recently I started active development of a WPF application and confronted a problem of UI interaction testing. While I was getting away with testing models and viewmodels relatively painlessly (most of the time anyway), and &lt;a href=&quot;http://msdn.microsoft.com/en-us/library/vstudio/jj171026.aspx&quot;&gt;there&amp;rsquo;s apparently a way to test animations and other interactions with Blend&lt;/a&gt;, I missed the ability to see how well does the UI behave in reaction to change in the domain model.&lt;/p&gt;
 
 &lt;p&gt;I initially created a testbed for my application which basically was a window with the UI in question and a panel of buttons, that would launch different actions in model. But that didn&amp;rsquo;t feel right &amp;ndash; JavaScript developers have the luxury of a REPL in the browser, and a possibility to inspect and manipulate UI elements.&lt;/p&gt;

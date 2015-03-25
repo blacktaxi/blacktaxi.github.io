@@ -4,7 +4,7 @@
   <title></title>
   <link href="http://reversemicrowave.me"/>
   <link type="application/atom+xml" rel="self" href="http://reversemicrowave.me/atom.xml"/>
-  <updated>2014-05-17T03:06:58+03:00</updated>
+  <updated>2014-05-16T17:06:58-07:00</updated>
   <id>http://reversemicrowave.me</id>
   <author>
     <name>Sergey Yavnyi</name>
@@ -13,11 +13,11 @@
 
   
   <entry>
-    <id>http://reversemicrowave.me/blog/2014/05/17/haskell-audio</id>
-    <link type="text/html" rel="alternate" href="http://reversemicrowave.me/blog/2014/05/17/haskell-audio"/>
+    <id>http://reversemicrowave.me/blog/2014/05/16/haskell-audio</id>
+    <link type="text/html" rel="alternate" href="http://reversemicrowave.me/blog/2014/05/16/haskell-audio"/>
     <title>Simplistic audio synthesis with Haskell</title>
-    <published>2014-05-17T03:06:58+03:00</published>
-    <updated>2014-05-17T03:06:58+03:00</updated>
+    <published>2014-05-16T17:06:58-07:00</published>
+    <updated>2014-05-16T17:06:58-07:00</updated>
     <author>
       <name>Sergey Yavnyi</name>
       <uri>http://reversemicrowave.me</uri>
@@ -209,11 +209,11 @@ at which the signal starts:&lt;/p&gt;
   </entry>
   
   <entry>
-    <id>http://reversemicrowave.me/blog/2013/12/19/a-password-generation-tool</id>
-    <link type="text/html" rel="alternate" href="http://reversemicrowave.me/blog/2013/12/19/a-password-generation-tool"/>
+    <id>http://reversemicrowave.me/blog/2013/12/18/a-password-generation-tool</id>
+    <link type="text/html" rel="alternate" href="http://reversemicrowave.me/blog/2013/12/18/a-password-generation-tool"/>
     <title>Another password generation tool</title>
-    <published>2013-12-19T02:06:58+02:00</published>
-    <updated>2013-12-19T02:06:58+02:00</updated>
+    <published>2013-12-18T16:06:58-08:00</published>
+    <updated>2013-12-18T16:06:58-08:00</updated>
     <author>
       <name>Sergey Yavnyi</name>
       <uri>http://reversemicrowave.me</uri>
@@ -306,11 +306,11 @@ at which the signal starts:&lt;/p&gt;
   </entry>
   
   <entry>
-    <id>http://reversemicrowave.me/blog/2013/10/18/embedding-a-python-repl-in-a-wpf-application</id>
-    <link type="text/html" rel="alternate" href="http://reversemicrowave.me/blog/2013/10/18/embedding-a-python-repl-in-a-wpf-application"/>
+    <id>http://reversemicrowave.me/blog/2013/10/17/embedding-a-python-repl-in-a-wpf-application</id>
+    <link type="text/html" rel="alternate" href="http://reversemicrowave.me/blog/2013/10/17/embedding-a-python-repl-in-a-wpf-application"/>
     <title>Embedding a Python REPL in a WPF application</title>
-    <published>2013-10-18T03:06:58+03:00</published>
-    <updated>2013-10-18T03:06:58+03:00</updated>
+    <published>2013-10-17T17:06:58-07:00</published>
+    <updated>2013-10-17T17:06:58-07:00</updated>
     <author>
       <name>Sergey Yavnyi</name>
       <uri>http://reversemicrowave.me</uri>
@@ -425,11 +425,11 @@ at which the signal starts:&lt;/p&gt;
   </entry>
   
   <entry>
-    <id>http://reversemicrowave.me/blog/2013/08/29/icfpc2013</id>
-    <link type="text/html" rel="alternate" href="http://reversemicrowave.me/blog/2013/08/29/icfpc2013"/>
+    <id>http://reversemicrowave.me/blog/2013/08/28/icfpc2013</id>
+    <link type="text/html" rel="alternate" href="http://reversemicrowave.me/blog/2013/08/28/icfpc2013"/>
     <title>M-type vs ICFPC 2013</title>
-    <published>2013-08-29T03:06:58+03:00</published>
-    <updated>2013-08-29T03:06:58+03:00</updated>
+    <published>2013-08-28T17:06:58-07:00</published>
+    <updated>2013-08-28T17:06:58-07:00</updated>
     <author>
       <name>Sergey Yavnyi</name>
       <uri>http://reversemicrowave.me</uri>
@@ -495,7 +495,7 @@ at which the signal starts:&lt;/p&gt;
     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;ow&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;While our &amp;lsquo;player&amp;rsquo; (the part that communicates with the server and implements the solving strategy) wasn&amp;rsquo;t ready yet, I ran the generation to store results on disk so that we can start running as soon as the &amp;#39;player&amp;rsquo; is ready.&lt;/p&gt;
+&lt;p&gt;While our &amp;lsquo;player&amp;rsquo; (the part that communicates with the server and implements the solving strategy) wasn&amp;rsquo;t ready yet, I ran the generation to store results on disk so that we can start running as soon as the &amp;lsquo;player&amp;rsquo; is ready.&lt;/p&gt;
 
 &lt;p&gt;Our solving strategy was as follows:&lt;/p&gt;
 
@@ -512,13 +512,13 @@ at which the signal starts:&lt;/p&gt;
 
 &lt;ul&gt;
 &lt;li&gt; submit a random program from our current list;&lt;/li&gt;
-&lt;li&gt; if the server responds with a &amp;#39;mismatch&amp;rsquo; &amp;ndash; go back to filtering phase.&lt;/li&gt;
+&lt;li&gt; if the server responds with a &amp;lsquo;mismatch&amp;rsquo; &amp;ndash; go back to filtering phase.&lt;/li&gt;
 &lt;/ul&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;At problem size 11 generation was already taking several minutes, and at size 12 we hit a brick wall &amp;ndash; it took 30 to 50 minutes each! At this point we decided that we should start running our solver as it was 1.5 hours before the lighthing round deadline. &lt;/p&gt;
 
-&lt;p&gt;We managed to solve all problems up to (and including) size 10, and about a half of 11s before the time was up. It was scary to see a &amp;#39;mismatch&amp;rsquo; for the first time, but really everything went smoothly &amp;ndash; we didn&amp;rsquo;t fail anything and I can&amp;rsquo;t remember any major mishaps we&amp;rsquo;ve had.&lt;/p&gt;
+&lt;p&gt;We managed to solve all problems up to (and including) size 10, and about a half of 11s before the time was up. It was scary to see a &amp;lsquo;mismatch&amp;rsquo; for the first time, but really everything went smoothly &amp;ndash; we didn&amp;rsquo;t fail anything and I can&amp;rsquo;t remember any major mishaps we&amp;rsquo;ve had.&lt;/p&gt;
 
 &lt;p&gt;After hour 24 I left the solver running for problems of size 11, and ran the generator for size 12 on another computer (so that next morning we could submit some more solutions) and went to sleep.&lt;/p&gt;
 
@@ -584,11 +584,11 @@ I don&amp;rsquo;t remember doing any optimizations before rebuilding.&lt;/p&gt;
 
 &lt;p&gt;Many optimizations were tried out and implemented this day. Some of us worked on ways to reduce the overall amount of generated programs we get &amp;ndash; less programs means less evaluations means faster filtering. Others tried different approaches to speed up the evaluation of a program.&lt;/p&gt;
 
-&lt;p&gt;We tried out three different &amp;#39;compilation&amp;rsquo; methods (one of which was the actual compilation to .NET bytecode).&lt;/p&gt;
+&lt;p&gt;We tried out three different &amp;lsquo;compilation&amp;rsquo; methods (one of which was the actual compilation to .NET bytecode).&lt;/p&gt;
 
 &lt;p&gt;At first, we tried to convert our expression tree into a nested closures: this would work the same as normal expression tree walking, but only with the walking path fixed in a tree of nested closures.&lt;/p&gt;
 
-&lt;p&gt;This gave us a speedup of 2x, but it still wasn&amp;rsquo;t enough &amp;ndash; by this time, I think, we had our first failed problem because we didn&amp;rsquo;t make it on time. So then we tried to convert expression trees to &lt;a href=&quot;http://en.wikipedia.org/wiki/Reverse_Polish_notation&quot;&gt;RPN&lt;/a&gt; and evaluate those with a &amp;#39;stack machine&amp;rsquo;.&lt;/p&gt;
+&lt;p&gt;This gave us a speedup of 2x, but it still wasn&amp;rsquo;t enough &amp;ndash; by this time, I think, we had our first failed problem because we didn&amp;rsquo;t make it on time. So then we tried to convert expression trees to &lt;a href=&quot;http://en.wikipedia.org/wiki/Reverse_Polish_notation&quot;&gt;RPN&lt;/a&gt; and evaluate those with a &amp;lsquo;stack machine&amp;rsquo;.&lt;/p&gt;
 
 &lt;p&gt;That didn&amp;rsquo;t help much either &amp;ndash; the speed was almost exactly the same. So the next thing to try would be to use F#&amp;rsquo;s quotations to construct the program, and then compile it to an actual function (.NET method). I&amp;rsquo;ve spent several hours on this, as juggling code quotations turned out to be much harder than I thought it would.&lt;/p&gt;
 
@@ -670,7 +670,7 @@ I don&amp;rsquo;t remember doing any optimizations before rebuilding.&lt;/p&gt;
 
 &lt;p&gt;We ran out of ideas and were running out of time. Only then we realized, that the program &lt;em&gt;doesn&amp;rsquo;t have&lt;/em&gt; to be of exact length, and &lt;em&gt;doesn&amp;rsquo;t have&lt;/em&gt; to contain each operator at least once.&lt;/p&gt;
 
-&lt;p&gt;So with this knowledge, our next desperate attempt would be to try and solve big problems with small programs. At first I tried to run our solver on about 20 of those manually, and most of the time it succeeded. So, we decided we should automate this and send it to battle. I should say, that by this point a &amp;#39;failed&amp;rsquo; problem was a normal thing, since we started feeling we didn&amp;rsquo;t have anything to lose.&lt;/p&gt;
+&lt;p&gt;So with this knowledge, our next desperate attempt would be to try and solve big problems with small programs. At first I tried to run our solver on about 20 of those manually, and most of the time it succeeded. So, we decided we should automate this and send it to battle. I should say, that by this point a &amp;lsquo;failed&amp;rsquo; problem was a normal thing, since we started feeling we didn&amp;rsquo;t have anything to lose.&lt;/p&gt;
 
 &lt;p&gt;I implemented a strategy like this for our solver:&lt;/p&gt;
 
@@ -681,18 +681,18 @@ I don&amp;rsquo;t remember doing any optimizations before rebuilding.&lt;/p&gt;
 &lt;li&gt;  repeat until every problem is either solved or failed.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;The &amp;#39;easiness&amp;rsquo; of a problem was determined, aside from it&amp;rsquo;s size, by the amount of operators it had, and by which operators. For example, &lt;code&gt;fold&lt;/code&gt; problems were easier to solve, as there was a lot less possible combinations, because &lt;code&gt;fold&lt;/code&gt; takes up a lot of program space.&lt;/p&gt;
+&lt;p&gt;The &amp;lsquo;easiness&amp;rsquo; of a problem was determined, aside from it&amp;rsquo;s size, by the amount of operators it had, and by which operators. For example, &lt;code&gt;fold&lt;/code&gt; problems were easier to solve, as there was a lot less possible combinations, because &lt;code&gt;fold&lt;/code&gt; takes up a lot of program space.&lt;/p&gt;
 
 &lt;p&gt;I left this running on two computers and went to sleep. In the morning I checked the status, and saw a jolly good +100 points.&lt;/p&gt;
 </content>
   </entry>
   
   <entry>
-    <id>http://reversemicrowave.me/blog/2012/09/10/bass-ir-stretching</id>
-    <link type="text/html" rel="alternate" href="http://reversemicrowave.me/blog/2012/09/10/bass-ir-stretching"/>
+    <id>http://reversemicrowave.me/blog/2012/09/09/bass-ir-stretching</id>
+    <link type="text/html" rel="alternate" href="http://reversemicrowave.me/blog/2012/09/09/bass-ir-stretching"/>
     <title>Better bass sound with convolution reverb</title>
-    <published>2012-09-10T03:06:58+03:00</published>
-    <updated>2012-09-10T03:06:58+03:00</updated>
+    <published>2012-09-09T17:06:58-07:00</published>
+    <updated>2012-09-09T17:06:58-07:00</updated>
     <author>
       <name>Sergey Yavnyi</name>
       <uri>http://reversemicrowave.me</uri>
@@ -723,7 +723,7 @@ I don&amp;rsquo;t remember doing any optimizations before rebuilding.&lt;/p&gt;
 
 &lt;p&gt;I have a bass which doesn&amp;rsquo;t sound very good on it&amp;rsquo;s own, and I don&amp;rsquo;t even make up to it with my playing, hehe. Usually I just record it directly, maybe with some equalisation and compression afterwards, but I don&amp;rsquo;t like how it sounds that way &amp;ndash; &amp;ldquo;thin&amp;rdquo;. With some sound processing I can make it bearable. &lt;/p&gt;
 
-&lt;p&gt;I like the somewhat raw and &amp;ldquo;mean&amp;rdquo; bass sound, something alike to the sound on &lt;a href=&quot;http://en.wikipedia.org/wiki/Eatin&amp;#x27;_Dust&quot;&gt;Fu Manchu &amp;ndash; Eatin&amp;rsquo; Dust&lt;/a&gt; album. Something with low resonance and a good amount of grit and crunch.&lt;/p&gt;
+&lt;p&gt;I like the somewhat raw and &amp;ldquo;mean&amp;rdquo; bass sound, something alike to the sound on &lt;a href=&quot;http://en.wikipedia.org/wiki/Eatin&amp;#x27;_Dust&quot;&gt;Fu Manchu &amp;ndash; Eatin&amp;#39; Dust&lt;/a&gt; album. Something with low resonance and a good amount of grit and crunch.&lt;/p&gt;
 
 &lt;p&gt;My bass signal chain is as follows:&lt;/p&gt;
 
