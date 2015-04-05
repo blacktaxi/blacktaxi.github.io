@@ -3,7 +3,7 @@
  <title> home studio</title>
  <link href="http://reversemicrowave.me/tag/home%20studio.xml" rel="self"/>
  <link href="http://reversemicrowave.me/tag/home studio.html"/>
- <updated>2014-05-16T17:06:58-07:00</updated>
+ <updated>2014-05-17T03:06:58+03:00</updated>
  <id>http://reversemicrowave.me/tag/home studio.html</id>
  <author>
    <name>Sergey Yavnyi</name>
@@ -11,9 +11,9 @@
  
  <entry>
    <title>Better bass sound with convolution reverb</title>
-   <link href="http://reversemicrowave.me/blog/2012/09/09/bass-ir-stretching"/>
-   <updated>2012-09-09T17:06:58-07:00</updated>
-   <id>http://reversemicrowave.me/blog/2012/09/09/bass-ir-stretching</id>
+   <link href="http://reversemicrowave.me/blog/2012/09/10/bass-ir-stretching"/>
+   <updated>2012-09-10T03:06:58+03:00</updated>
+   <id>http://reversemicrowave.me/blog/2012/09/10/bass-ir-stretching</id>
    <content type="html">&lt;p&gt;If you have some experience in home recording, you probably know about &lt;a href=&quot;http://en.wikipedia.org/wiki/Convolution_reverb&quot;&gt;convolution reverbs&lt;/a&gt; and &lt;a href=&quot;http://trystan.org/press/?p=194&quot;&gt;guitar cabinet simulation&lt;/a&gt; software and related techniques.&lt;/p&gt;
 
 &lt;p&gt;If you don&amp;rsquo;t, I strongly recommend to learn about that because you can do some really cool stuff with convolution reverbs, and a lot of the time (especially given a good &lt;a href=&quot;http://en.wikipedia.org/wiki/Convolution_reverb#Creation_of_impulse_responses&quot;&gt;impulse response&lt;/a&gt;) they sound really good.&lt;/p&gt;

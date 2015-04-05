@@ -3,7 +3,7 @@
  <title> icfpc</title>
  <link href="http://reversemicrowave.me/tag/icfpc.xml" rel="self"/>
  <link href="http://reversemicrowave.me/tag/icfpc.html"/>
- <updated>2014-05-16T17:06:58-07:00</updated>
+ <updated>2014-05-17T03:06:58+03:00</updated>
  <id>http://reversemicrowave.me/tag/icfpc.html</id>
  <author>
    <name>Sergey Yavnyi</name>
@@ -11,9 +11,9 @@
  
  <entry>
    <title>M-type vs ICFPC 2013</title>
-   <link href="http://reversemicrowave.me/blog/2013/08/28/icfpc2013"/>
-   <updated>2013-08-28T17:06:58-07:00</updated>
-   <id>http://reversemicrowave.me/blog/2013/08/28/icfpc2013</id>
+   <link href="http://reversemicrowave.me/blog/2013/08/29/icfpc2013"/>
+   <updated>2013-08-29T03:06:58+03:00</updated>
+   <id>http://reversemicrowave.me/blog/2013/08/29/icfpc2013</id>
    <content type="html">&lt;p&gt;This was the first ICFPC ever for me, and for other guys on the team as well. Amazing experience, and I&amp;rsquo;m very thankful to the organizers and to my friends who came to hack with me. It was a weekend full of fun and constant deadline pressure. I haven&amp;rsquo;t been solving non-trivial algorithmic problems since I can&amp;rsquo;t remember, and this experience was a great reminder.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-json&quot; data-lang=&quot;json&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;nt&quot;&gt;&amp;quot;contestScore&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;547&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;

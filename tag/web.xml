@@ -3,7 +3,7 @@
  <title> web</title>
  <link href="http://reversemicrowave.me/tag/web.xml" rel="self"/>
  <link href="http://reversemicrowave.me/tag/web.html"/>
- <updated>2014-05-16T17:06:58-07:00</updated>
+ <updated>2014-05-17T03:06:58+03:00</updated>
  <id>http://reversemicrowave.me/tag/web.html</id>
  <author>
    <name>Sergey Yavnyi</name>
@@ -11,9 +11,9 @@
  
  <entry>
    <title>Another password generation tool</title>
-   <link href="http://reversemicrowave.me/blog/2013/12/18/a-password-generation-tool"/>
-   <updated>2013-12-18T16:06:58-08:00</updated>
-   <id>http://reversemicrowave.me/blog/2013/12/18/a-password-generation-tool</id>
+   <link href="http://reversemicrowave.me/blog/2013/12/19/a-password-generation-tool"/>
+   <updated>2013-12-19T02:06:58+02:00</updated>
+   <id>http://reversemicrowave.me/blog/2013/12/19/a-password-generation-tool</id>
    <content type="html">&lt;h2&gt;Motivation&lt;/h2&gt;
 
 &lt;p&gt;The Windows 2008 R2 on our build server has been reminding me to change the password for quite some time now. Since I can remember I&amp;rsquo;ve been mostly using relatively short (8-10 characters) randomly generated passwords. While it is not too hard (although takes time) to remember one of those, there&amp;rsquo;s a much better way to generate a password, as was illustrated &lt;a href=&quot;http://xkcd.com/936/&quot;&gt;in this comic&lt;/a&gt;.&lt;/p&gt;

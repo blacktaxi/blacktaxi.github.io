@@ -3,7 +3,7 @@
  <title> haskell</title>
  <link href="http://reversemicrowave.me/tag/haskell.xml" rel="self"/>
  <link href="http://reversemicrowave.me/tag/haskell.html"/>
- <updated>2014-05-16T17:06:58-07:00</updated>
+ <updated>2014-05-17T03:06:58+03:00</updated>
  <id>http://reversemicrowave.me/tag/haskell.html</id>
  <author>
    <name>Sergey Yavnyi</name>
@@ -11,9 +11,9 @@
  
  <entry>
    <title>Simplistic audio synthesis with Haskell</title>
-   <link href="http://reversemicrowave.me/blog/2014/05/16/haskell-audio"/>
-   <updated>2014-05-16T17:06:58-07:00</updated>
-   <id>http://reversemicrowave.me/blog/2014/05/16/haskell-audio</id>
+   <link href="http://reversemicrowave.me/blog/2014/05/17/haskell-audio"/>
+   <updated>2014-05-17T03:06:58+03:00</updated>
+   <id>http://reversemicrowave.me/blog/2014/05/17/haskell-audio</id>
    <content type="html">&lt;p&gt;In an effort to practice Haskell, I&amp;rsquo;ve been working on &lt;a href=&quot;https://github.com/blacktaxi/inversion&quot;&gt;a program&lt;/a&gt;
 that generates guitar chords for a given chord &amp;ldquo;specification&amp;rdquo;.&lt;/p&gt;
 
