@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>reverse microwave: Hello, js_of_ocaml</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link href='/media/global-bc96c20b13899dcf1ffa0506a1fa3629.css' rel='stylesheet' type='text/css' />
+
+
+    </head>
+    <body>
+        <div class="main">
+        <div class="page-header">
+            <header class="clearfix">
+                <h1 class="site-title"><a href="/">reverse microwave</a></h1>
+                <span class="site-subtitle">the</span>
+                <div class="site-nav">
+                <nav>
+                    <ul>
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        <li><a href="/blog/index.html">blog</a></li>
+                            
+                        
+                            
+                        <li><a href="/about/index.html">about</a></li>
+                            
+                        
+                    </ul>
+                </nav>
+                </div>
+            </header>
+        </div>
+        <div class="page-content">
+                <article>
+    <header class="post-header">
+        <h1><a href="/blog/2015/04/20/js_of_ocaml-pwdgen">Hello, js_of_ocaml</a></h1>
+        <p class="meta">20 Apr 2015 in <a href="/tag/programming.html" rel="tag">programming</a>, <a href="/tag/web.html" rel="tag">web</a>, <a href="/tag/javascript.html" rel="tag">javascript</a>, <a href="/tag/ocaml.html" rel="tag">ocaml</a> • <a href="/blog/2015/04/20/js_of_ocaml-pwdgen">∞</a></p>
+    </header>
+    <hr/>
+
+    <div class="post-content">
+        <p>Recently I finally got myself to try writing some
+OCaml. Of course, I never make it easy for myself, so I tried out js_of_ocaml
+at the same time.</p>
+
+<p>I wanted to improve my <a href="/blog/2013/12/19/a-password-generation-tool/">password generation tool</a> to
+generate passwords on the client side, as server-side password generation
+with security improvement pretense is just clown-worthy.</p>
+
+<!-- more -->
+
+<h4>TL;DR</h4>
+
+<p>It all worked out &ndash; js_of_ocaml is pretty cool, but I wouldn&rsquo;t say I&rsquo;d rush
+to use it in a production system right away. Of course I have little to no
+OCaml and js_of_ocaml experience, so perhaps with some more time invested it
+gets a lot better.</p>
+
+<p>The end result can be seen here: <a href="http://reversemicrowave.me/pwdgen">password generation app (CLICK)</a>.
+The source code is on <a href="https://github.com/blacktaxi/pwdgen/tree/8e72c559992c3b452dec99ee53c5555fff911029">GitHub</a>.</p>
+
+<h2>OCaml, js_of_ocaml</h2>
+
+<p><a href="https://ocaml.org/">OCaml</a> is a general purpose programming language with strong bias towards
+statically-typed functional programming. It descends from the
+ML family of languages and has been around for a rather long time now. Some of
+the cool features of this language are:</p>
+
+<ul>
+<li>first-class parametrizable modules, which are often compared to Haskell&rsquo;s
+typeclasses, but are in fact more powerful in a way that they can be parametrized
+not only by type, but by value. (see <a href="https://realworldocaml.org/v1/en/html/functors.html">OCaml Functors</a>)</li>
+<li>sophisticated <a href="https://realworldocaml.org/v1/en/html/objects.html">object system</a>
+with support for structural typing</li>
+<li>powerful type system with support for <a href="https://blogs.janestreet.com/why-gadts-matter-for-performance/">GADTs</a>
+and <a href="http://okmij.org/ftp/Computation/lightweight-dependent-typing.html">dependent types to some extent</a>.</li>
+</ul>
+
+<p><a href="http://ocsigen.org/js_of_ocaml/">js_of_ocaml</a> is an <a href="https://realworldocaml.org/v1/en/html/the-compiler-backend-byte-code-and-native-code.html">OCaml bytecode</a> compiler that outputs JavaScript. It&rsquo;s been developed since at least 2010 and
+the project seems to be getting a <a href="https://github.com/ocsigen/js_of_ocaml">fair amount of activity</a>.</p>
+
+<p>Since js_of_ocaml compiles OCaml bytecode, it therefore does not limit the
+language to some subset &ndash; it is a full-on OCaml compiler to JavaScript.</p>
+
+<h2>Performance</h2>
+
+<p>It&rsquo;s hard to assess performance in my use case since I don&rsquo;t do any heavy
+computation and don&rsquo;t rely on low latency, but let&rsquo;s look at Chrome dev tools
+profiler&rsquo;s data.</p>
+
+<p><strong>Disclaimer: I&rsquo;m not trying to pretend this is a legit analysis of JavaScript code
+generated by js_of_ocaml. I&rsquo;m pretty sure it is the way it is only because I
+made it so.</strong></p>
+
+<p>The program itself is rather simple. The password generation is done in
+a series of steps:</p>
+
+<ul>
+<li>parse the password template, creating a password template definition structure</li>
+<li>for each item in the passowrd template, run a corresponding random token generation function</li>
+<li>concatenate the results into a single string</li>
+</ul>
+
+<h3>Memory</h3>
+
+<p>According to memory profiler, each password generation run allocates about 20Mb
+of heap memory. From the chart it looks like most of the allocated objects, by
+volume, are strings. This looks like a pretty bad result.</p>
+
+<figure class='normalsize'><img src="/media/2015-js_of_ocaml/memory.png"><figcaption>Memory allocation chart for a single password generation run.</figcaption></figure>
+
+<p>My guess about this is the inefficient string manipulation code:</p>
+<div class="highlight"><pre><code class="language-ocaml" data-lang="ocaml"><span class="k">let</span> <span class="k">rec</span> <span class="n">explode</span> <span class="o">:</span> <span class="kt">string</span> <span class="o">-&gt;</span> <span class="kt">char</span> <span class="kt">list</span> <span class="o">=</span> <span class="k">function</span>
+  <span class="o">|</span> <span class="s2">&quot;&quot;</span> <span class="o">-&gt;</span> <span class="bp">[]</span>
+  <span class="o">|</span> <span class="n">s</span> <span class="o">-&gt;</span>
+    <span class="o">(</span><span class="nn">String</span><span class="p">.</span><span class="n">get</span> <span class="n">s</span> <span class="mi">0</span><span class="o">)</span> <span class="o">::</span>
+    <span class="n">explode</span> <span class="o">(</span><span class="nn">String</span><span class="p">.</span><span class="n">sub</span> <span class="n">s</span> <span class="mi">1</span> <span class="o">((</span><span class="nn">String</span><span class="p">.</span><span class="n">length</span> <span class="n">s</span><span class="o">)</span> <span class="o">-</span> <span class="mi">1</span><span class="o">))</span>
+
+<span class="k">let</span> <span class="k">rec</span> <span class="n">implode</span> <span class="o">:</span> <span class="kt">char</span> <span class="kt">list</span> <span class="o">-&gt;</span> <span class="kt">string</span> <span class="o">=</span> <span class="k">function</span>
+  <span class="o">|</span> <span class="bp">[]</span> <span class="o">-&gt;</span> <span class="s2">&quot;&quot;</span>
+  <span class="o">|</span> <span class="n">x</span> <span class="o">::</span> <span class="n">xs</span> <span class="o">-&gt;</span> <span class="o">(</span><span class="nn">Char</span><span class="p">.</span><span class="n">escaped</span> <span class="n">x</span><span class="o">)</span> <span class="o">^</span> <span class="o">(</span><span class="n">implode</span> <span class="n">xs</span><span class="o">)</span>
+
+<span class="k">let</span> <span class="n">filter</span> <span class="n">p</span> <span class="n">s</span> <span class="o">=</span>
+  <span class="c">(* ugh *)</span>
+  <span class="n">explode</span> <span class="n">s</span> <span class="o">|&gt;</span> <span class="nn">List</span><span class="p">.</span><span class="n">filter</span> <span class="n">p</span> <span class="o">|&gt;</span> <span class="n">implode</span>
+</code></pre></div>
+<p>OCaml&rsquo;s standard library doesn&rsquo;t really have a lot of string processing functions.
+In fact, the string processing support in standard OCaml is rather lacking, if
+no abysmal, considering it&rsquo;s 2015 and there&rsquo;s not Unicode support.</p>
+
+<p>There&rsquo;s no excuse to my string manipulation code &ndash; I just went the simplest route and admit that efficiency of this implementation is horrible. I even used that <code>filter</code> function in one place.</p>
+
+<h3>CPU</h3>
+
+<p>Each generation takes about 50-100ms to complete, including ~1-3 garbage
+collections, on a 2.3GHz i7. Honestly, this is a pretty bad result as well. I would blame it all on the inefficient string processing again.</p>
+
+<figure class='normalsize'><img src="/media/2015-js_of_ocaml/cpu.png"><figcaption>Flame graph of a single password generation run.</figcaption></figure>
+
+<p>It doesn&rsquo;t seem to help that almost half of the time is spent doing garbage collection.</p>
+
+<h3>Generated code size</h3>
+
+<p>In my case, js_of_ocaml produced around 60kb of minified JavaScript, which I&rsquo;d
+say is not bad at all, especially compared to other compilers that have a
+JavaScript backend. They will often drag the whole runtime into the output, compiling
+a helloworld-like program to over 1Mb of JavaScript code (looking at you, GHCJS).</p>
+
+<h2>Ergonomics</h2>
+
+<p>At this minimal level of sophistication my experience with OCaml + js_of_ocaml has been
+good enough &ndash; it works.</p>
+
+<p>There are some pain points though.</p>
+
+<h4>Standard OCaml library</h4>
+
+<p>String processing support is <em>modest</em>: not a lot of string utility functions,
+no support for Unicode in the standard library. There also doesn&rsquo;t seem to be
+a lot of math functions in the standard library. I suppose there&rsquo;s everything
+you need is in the popular libraries like Batteries.</p>
+
+<h4>JavaScript interop</h4>
+
+<p>Interoperation with JavaScript could be more intuitive/documented. I think
+it also could be made somewhat easier to do.</p>
+
+<p>Calling OCaml functions from JavaScript:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">generate</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">dict</span><span class="p">,</span> <span class="nx">tpl</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// call into js_of_ocaml code</span>
+  <span class="k">return</span> <span class="nb">window</span><span class="p">.</span><span class="nx">pwdGen</span><span class="p">.</span><span class="nx">generate</span><span class="p">(</span><span class="nx">tpl</span><span class="p">)(</span><span class="nx">dict</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Exposing OCaml code to JavaScript:</p>
+<div class="highlight"><pre><code class="language-ocaml" data-lang="ocaml"><span class="k">let</span> <span class="n">m</span> <span class="o">=</span> <span class="nn">Js</span><span class="p">.</span><span class="nn">Unsafe</span><span class="p">.</span><span class="n">obj</span> <span class="o">[|</span> <span class="o">|]</span> <span class="k">in</span>
+<span class="nn">Js</span><span class="p">.</span><span class="nn">Unsafe</span><span class="p">.</span><span class="n">global</span><span class="o">##</span><span class="n">pwdGen</span> <span class="o">&lt;-</span> <span class="n">m</span><span class="o">;</span>
+
+<span class="k">let</span> <span class="n">js_generate</span> <span class="n">tpl_string</span> <span class="n">dict</span> <span class="o">=</span>
+<span class="c">(* ... *)</span>
+<span class="k">in</span>
+
+<span class="n">m</span><span class="o">##</span><span class="n">generate</span> <span class="o">&lt;-</span> <span class="nn">Js</span><span class="p">.</span><span class="n">wrap_callback</span> <span class="n">js_generate</span><span class="o">;</span>
+</code></pre></div>
+<p>Returning JavaScript objects from OCaml:</p>
+<div class="highlight"><pre><code class="language-ocaml" data-lang="ocaml"><span class="c">(* ... *)</span>
+<span class="o">|</span> <span class="nc">Error</span> <span class="n">e</span> <span class="o">-&gt;</span>
+  <span class="k">let</span> <span class="n">r</span> <span class="o">=</span> <span class="nn">Js</span><span class="p">.</span><span class="nn">Unsafe</span><span class="p">.</span><span class="n">obj</span> <span class="o">[|</span> <span class="o">|]</span> <span class="k">in</span>
+  <span class="n">r</span><span class="o">##</span><span class="n">error</span> <span class="o">&lt;-</span> <span class="nn">Js</span><span class="p">.</span><span class="n">string</span> <span class="o">(</span><span class="s2">&quot;Could not parse template: &quot;</span> <span class="o">^</span> <span class="n">e</span><span class="o">);</span>
+  <span class="n">r</span>
+<span class="c">(* ... *)</span>
+</code></pre></div>
+<h4><a href="https://opam.ocaml.org/">Opam</a></h4>
+
+<p>Often, the language&rsquo;s build system or the package manager can give a lot of grief to beginners.
+I liked my first opam experience though. I found the compiler switching
+feature very cool, although I only had to use it once so I could get js_of_ocaml
+to work.</p>
+
+
+        <div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'reversemicrowave'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+    </div>
+
+    <hr/>
+    <footer class="post-footer">
+    
+    <h4>
+        No related posts.
+    </h4>
+    
+    </footer>
+<article>
+        </div>
+
+        <div class="page-footer">
+            <footer class="clearfix">
+                <div class="contacts">
+                    <a class="link-feed" href="http://reversemicrowave.me/atom.xml">Atom feed</a></br>
+                </div>
+                <div class="copyleft">
+                    Copyright © 2012-2015 Sergey Yavnyi
+                </div>
+            </footer>
+        </div>
+        </div>
+
+        <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-43760927-1', 'reversemicrowave.me');
+  ga('send', 'pageview');
+
+</script>
+        
+    </body>
+</html>
