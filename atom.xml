@@ -109,9 +109,9 @@ volume, are strings. This looks like a pretty bad result.&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;OCaml&amp;rsquo;s standard library doesn&amp;rsquo;t really have a lot of string processing functions.
 In fact, the string processing support in standard OCaml is rather lacking, if
-no abysmal, considering it&amp;rsquo;s 2015 and there&amp;rsquo;s not Unicode support.&lt;/p&gt;
+not abysmal, considering it&amp;rsquo;s 2015 and there&amp;rsquo;s no Unicode support.&lt;/p&gt;
 
-&lt;p&gt;There&amp;rsquo;s no excuse to my string manipulation code &amp;ndash; I just went the simplest route and admit that efficiency of this implementation is horrible. I even used that &lt;code&gt;filter&lt;/code&gt; function in one place.&lt;/p&gt;
+&lt;p&gt;I just went the simplest route and think that efficiency of this implementation is horrible. I even used that &lt;code&gt;filter&lt;/code&gt; function in one place.&lt;/p&gt;
 
 &lt;h3&gt;CPU&lt;/h3&gt;
 
