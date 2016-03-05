@@ -77,6 +77,14 @@
                             
                         
                             
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
                         <li><a href="/blog/index.html">blog</a></li>
                             
                         
@@ -96,27 +104,25 @@
 <hr/>
 
 <header class="post-header">
-    <h1><a href="/blog/2015/04/20/js_of_ocaml-pwdgen">Hello, js_of_ocaml</a></h1>
-    <p class="meta">20 Apr 2015 in <a href="/tag/programming.html" rel="tag">programming</a>, <a href="/tag/web.html" rel="tag">web</a>, <a href="/tag/javascript.html" rel="tag">javascript</a>, <a href="/tag/ocaml.html" rel="tag">ocaml</a> • <a href="/blog/2015/04/20/js_of_ocaml-pwdgen">∞</a></p>
+    <h1><a href="/blog/2016/03/04/elm-secure-random">Cryptographically secure random numbers in Elm</a></h1>
+    <p class="meta">04 Mar 2016 in <a href="/tag/programming.html" rel="tag">programming</a>, <a href="/tag/web.html" rel="tag">web</a>, <a href="/tag/elm.html" rel="tag">elm</a>, <a href="/tag/functional-programming.html" rel="tag">functional programming</a> • <a href="/blog/2016/03/04/elm-secure-random">∞</a></p>
 </header>
 
 <div class="post-content">
-    <p>Recently I finally got myself to try writing some
-OCaml. Of course, I never make it easy for myself, so I tried out js_of_ocaml
-at the same time.</p>
+    <p>Elm comes with a <a href="http://package.elm-lang.org/packages/elm-lang/core/3.0.0/Random">nice purely-functional random number generator</a> in the standard library. In fact, it&rsquo;s a port of the Haskell&rsquo;s <a href="http://hackage.haskell.org/package/random-1.0.1.1/docs/System-Random.html"><code>System.Random</code></a>.</p>
 
-<p>I wanted to improve my <a href="/blog/2013/12/19/a-password-generation-tool/">password generation tool</a> to
-generate passwords on the client side, as server-side password generation
-with security improvement pretense is just clown-worthy.</p>
+<p>Not only this random number generator implementation is deterministic (that is, given the same initial seed it will produce the same random sequence), it is also strictly <a href="https://en.wikipedia.org/wiki/Pure_function">purely-functional</a> (just like everything in Elm, actually).</p>
 
 
 
 </div>
-<a href="/blog/2015/04/20/js_of_ocaml-pwdgen">Read more...</a>
+<a href="/blog/2016/03/04/elm-secure-random">Read more »</a>
 
 <hr/>
 <h2>Latest blog posts</h2>
 <ul class="posts">
+    
+    <li><span>04 Mar 2016</span> — <a href="/blog/2016/03/04/elm-secure-random">Cryptographically secure random numbers in Elm</a> in <a href="/tag/programming.html" rel="tag">programming</a>, <a href="/tag/web.html" rel="tag">web</a>, <a href="/tag/elm.html" rel="tag">elm</a>, <a href="/tag/functional-programming.html" rel="tag">functional programming</a></li>
     
     <li><span>20 Apr 2015</span> — <a href="/blog/2015/04/20/js_of_ocaml-pwdgen">Hello, js_of_ocaml</a> in <a href="/tag/programming.html" rel="tag">programming</a>, <a href="/tag/web.html" rel="tag">web</a>, <a href="/tag/javascript.html" rel="tag">javascript</a>, <a href="/tag/ocaml.html" rel="tag">ocaml</a></li>
     
@@ -128,7 +134,7 @@ with security improvement pretense is just clown-worthy.</p>
     
     <li><span>29 Aug 2013</span> — <a href="/blog/2013/08/29/icfpc2013">M-type vs ICFPC 2013</a> in <a href="/tag/programming.html" rel="tag">programming</a>, <a href="/tag/icfpc.html" rel="tag">icfpc</a></li>
     
-    <li><span>10 Sep 2012</span> — <a href="/blog/2012/09/10/bass-ir-stretching">Better bass sound with convolution reverb</a> in <a href="/tag/music.html" rel="tag">music</a>, <a href="/tag/home%20studio.html" rel="tag">home studio</a></li>
+    <li><span>10 Sep 2012</span> — <a href="/blog/2012/09/10/bass-ir-stretching">Better bass sound with convolution reverb</a> in <a href="/tag/music.html" rel="tag">music</a>, <a href="/tag/home-studio.html" rel="tag">home studio</a></li>
     
 </ul>
 
@@ -140,7 +146,7 @@ with security improvement pretense is just clown-worthy.</p>
                     <a class="link-feed" href="http://reversemicrowave.me/atom.xml">Atom feed</a></br>
                 </div>
                 <div class="copyleft">
-                    Copyright © 2012-2015 Sergey Yavnyi
+                    Copyright © 2012-2016 Sergey Yavnyi
                 </div>
             </footer>
         </div>

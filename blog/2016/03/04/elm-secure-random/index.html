@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>reverse microwave: Cryptographically secure random numbers in Elm</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link href='/media/global-bc96c20b13899dcf1ffa0506a1fa3629.css' rel='stylesheet' type='text/css' />
+
+
+    </head>
+    <body>
+        <div class="main">
+        <div class="page-header">
+            <header class="clearfix">
+                <h1 class="site-title"><a href="/">reverse microwave</a></h1>
+                <span class="site-subtitle">the</span>
+                <div class="site-nav">
+                <nav>
+                    <ul>
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        <li><a href="/blog/index.html">blog</a></li>
+                            
+                        
+                            
+                        <li><a href="/about/index.html">about</a></li>
+                            
+                        
+                    </ul>
+                </nav>
+                </div>
+            </header>
+        </div>
+        <div class="page-content">
+                <article>
+    <header class="post-header">
+        <h1><a href="/blog/2016/03/04/elm-secure-random">Cryptographically secure random numbers in Elm</a></h1>
+        <p class="meta">04 Mar 2016 in <a href="/tag/programming.html" rel="tag">programming</a>, <a href="/tag/web.html" rel="tag">web</a>, <a href="/tag/elm.html" rel="tag">elm</a>, <a href="/tag/functional-programming.html" rel="tag">functional programming</a> • <a href="/blog/2016/03/04/elm-secure-random">∞</a></p>
+    </header>
+    <hr/>
+
+    <div class="post-content">
+        <p>Elm comes with a <a href="http://package.elm-lang.org/packages/elm-lang/core/3.0.0/Random">nice purely-functional random number generator</a> in the standard library. In fact, it&rsquo;s a port of the Haskell&rsquo;s <a href="http://hackage.haskell.org/package/random-1.0.1.1/docs/System-Random.html"><code>System.Random</code></a>.</p>
+
+<p>Not only this random number generator implementation is deterministic (that is, given the same initial seed it will produce the same random sequence), it is also strictly <a href="https://en.wikipedia.org/wiki/Pure_function">purely-functional</a> (just like everything in Elm, actually).</p>
+
+<!-- more -->
+<div class="highlight"><pre><code class="language-text" data-lang="text">generate : Generator a -&gt; Seed -&gt; (a, Seed)
+</code></pre></div>
+<p>Above is the signature of the <a href="http://package.elm-lang.org/packages/elm-lang/core/3.0.0/Random#generate"><code>generate</code></a> function that you use to produce random values. It takes a generator (<code>Generator a</code>) and a seed (<code>Seed</code>), and returns a randomly generated value (<code>a</code>) and the new <code>Seed</code>. And if you want to generate another random value, you need to use this new <code>Seed</code> in the next call to <code>generate</code> – if not, you&rsquo;ll get back the same number that you got the first time.</p>
+
+<p>So <code>generate</code>&rsquo;s type signature explicitly tells us that the random value generation is completely defined by the seed that we supply it. This means that, if we have the initial <code>Seed</code>, we can get the whole sequence of random values.</p>
+
+<p>Can this kind of generator be suitable for security-sensitive applications?</p>
+
+<h2>Secure random numbers</h2>
+
+<p>Probably not.</p>
+
+<p>Deterministic random generation is great when you want to reproduce the application&rsquo;s behavior consistently, for example in automated tests. Such generators can, of course, be useful in many other scenarios. For example, in deterministic models in game development, procedural content generation, etc.</p>
+
+<p>But for security-related applications it is <em>completely opposite</em>: you definitely <em>don&rsquo;t</em> want anyone to be able to figure out your randomly generated private key. If we wanted to generate random values for cryptographic purpose, we definitely wouldn&rsquo;t want the random generator to be so explicitly predictable.</p>
+
+<h3>The perfect generator</h3>
+
+<p>Surprisingly, the core Elm library doesn&rsquo;t come with such a random value generator.</p>
+
+<p>So we&rsquo;re going to try to bring it to Elm. To start simple, let&rsquo;s limit to generating <code>Int</code>s – the rest we then can easily derive later.</p>
+
+<p>Suppose our ideal random value generating function would have the following signature:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">getRandomInt : () -&gt; Int
+</code></pre></div>
+<p>According to this type signature, we don&rsquo;t want to give the generation function any context at all, and we want a random <code>Int</code> in return. As the function doesn&rsquo;t take a seed or other random generation algorithm parameters as an argument means that the function caller is not in control of
+the random value generation anymore – perfect.</p>
+
+<p>So how does one implement such a function? Well, turns out it is impossible to do in a purely-functional way. Think about it, how would you make a random number every time if all you are given is a <code>()</code>? Even returning just different number on each call is impossible:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">getRandomInt : () -&gt; Int
+getRandomInt () = ... -- what?
+</code></pre></div>
+<p>Mathematically speaking, the function&rsquo;s <a href="https://en.wikipedia.org/wiki/Image_(mathematics)">image</a> can not have more elements than it&rsquo;s <a href="https://en.wikipedia.org/wiki/Domain_of_a_function">domain</a>, by definition. Domain, in our case, is the <code>()</code> type, which is inhabited by exactly one value (or element). This means that such kind of function can only return the same value every time.</p>
+
+<h3>Breaking the math</h3>
+
+<p>So mathematically, we can not make a perfect random number generator. So what? This is not a maths class, <em>this is hacking</em>!</p>
+
+<p>Given that modern browsers already provide a cryptographically secure random number generator implementation, the <a href="https://developer.mozilla.org/en-US/docs/Web/API/RandomSource/getRandomValues">window.crypto.getRandomValues</a> function, we will only need to provide Elm bindings for it!</p>
+
+<p>Writing Elm bindings for raw JavaScript code <a href="https://github.com/NoRedInk/take-home/wiki/Writing-your-first-Elm-Native-module">is not complicated</a>. In our case, it would look like this:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// boilerplate</span>
+<span class="nx">Elm</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="nx">Elm</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span><span class="p">.</span><span class="nx">make</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">localRuntime</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span> <span class="o">=</span> <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span> <span class="o">||</span> <span class="p">{};</span>
+  <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span> <span class="o">=</span> <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span> <span class="o">||</span> <span class="p">{};</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span><span class="p">.</span><span class="nx">values</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span><span class="p">.</span><span class="nx">values</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="c1">// actual code</span>
+  <span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">crypto</span><span class="p">;</span>
+
+  <span class="k">return</span> <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span><span class="p">.</span><span class="nx">values</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">getRandomInt</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="c1">// generate a singleton array of unsigned 32-bit ints and return</span>
+      <span class="c1">// that single value.</span>
+      <span class="k">return</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">getRandomValues</span><span class="p">(</span><span class="k">new</span> <span class="nx">Uint32Array</span><span class="p">(</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">];</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>And the Elm module:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">module SecureRandom where
+
+import Native.SecureRandom
+
+getRandomInt : () -&gt; Int
+getRandomInt = Native.SecureRandom.getRandomInt
+</code></pre></div>
+<h2>Side effects</h2>
+
+<p>Okay, this should work, right?</p>
+
+<p><a href="https://www.youtube.com/watch?v=p8-HDUBbtgQ">Wrong</a>.</p>
+
+<p>It will <em>run</em>, but will work largely not the way one might expect. The problem is that this isn&rsquo;t a pure function anymore: the math is broken, and it will not return the same value given the same input (hello, random number generation?), by causing a side effect of changing the random generator&rsquo;s internal state.</p>
+
+<p>Now if you consider this type signature again, you might see that it doesn&rsquo;t really make any sense in a purely-functional programming language: it will have to either return the same value every time (because how can a function&rsquo;s value vary if it can&rsquo;t get any variation in it&rsquo;s input?), thus not being random at all, <em>or</em> completely abandon <a href="https://en.wikipedia.org/wiki/Pure_function">purity</a> (that&rsquo;s what we did with our JavaScript bindings).</p>
+
+<p>Being impure might not seem like a big deal, but there are practical implications to this. As <a href="https://en.wikipedia.org/wiki/Referential_transparency">referential transparency</a> is now broken for your impure (or effectful) function, you can not make a lot of assumptions about your code by just looking at it. The state that the function depends on (to provide the side effects) is now removed from the function&rsquo;s type signature. You now will need to mentally manipulate this state every time the function is called in order to determine the call&rsquo;s result. And as this state may change on every call, you now can not tell the result of your program <a href="https://en.wikipedia.org/wiki/Halting_problem">until you actually execute it</a>.</p>
+
+<p>The compiler is now misguided too: since it assumes that all functions are pure, it may decide to reorder, inline or substitute function calls for optimizations. As an effectful function&rsquo;s result now really depends on some hidden state (of which the compiler is not aware!), these optimizations may result in an absolutely unpredictable and most certainly incorrect program behavior.</p>
+
+<h3>Taming side effects in Elm</h3>
+
+<p>As we established that our <code>getRandomInt</code> function will have side effects, we now should use the power of the language&rsquo;s type system and encode this fact in the function&rsquo;s type. We will also need to use a proper implementation.</p>
+
+<p>One way to accomplish this in Elm is using the <a href="http://package.elm-lang.org/packages/elm-lang/core/3.0.0/Task"><code>Task x a</code></a> type. It is widely used to do things like HTTP requests, local storage access, reading cookies, etc. All of these operations have side effects, as they either depend on or modify some global environment.</p>
+
+<p>A <code>Task x a</code> value means that some, possibly effectful, action (task) will be performed at some point in time, and a successful result of its execution will be an <code>a</code> value while a failure result will be encoded with an <code>x</code> value. It is not that dissimilar from the .NET&rsquo;s <a href="https://msdn.microsoft.com/en-us/library/system.threading.tasks.task(v=vs.110).aspx"><code>Task&lt;T&gt;</code></a> class and Haskell&rsquo;s <a href="https://hackage.haskell.org/package/base-4.8.2.0/docs/System-IO.html#t:IO"><code>IO a</code></a>.</p>
+
+<p>So our updated function signature should now look like this:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">getRandomInt : () -&gt; Task never Int
+</code></pre></div>
+<p>We know that we want to do an effectful computation – generate a random value of type <code>Int</code>. We&rsquo;re keeping it simple for now, by saying that our computation can never fail – that&rsquo;s what the <code>never</code> type variable means in our case.</p>
+
+<p><em>(The name <code>never</code> doesn&rsquo;t actually matter, it&rsquo;s only important that it is a free type variable and our function&rsquo;s return value of type <code>Task x Int</code> can be used with any <code>x</code>, depending on the context.)</em></p>
+
+<p>But how do we know that this kind of function will not have any (unwanted) side effects? We know this by inspecting the possibilities that Elm gives us to operate on <code>Task x a</code> values:</p>
+
+<ul>
+<li>  You can not get the resulting value out of a <code>Task</code> immediately, thus causing the side effect to happen arbitrarily</li>
+<li>  You do not control when the <code>Task</code> is actually executed – the Elm runtime does this for you, and you should trust it</li>
+</ul>
+
+<p>You are fundamentally limited to just two things you can do to <code>Task</code>s:</p>
+
+<ul>
+<li><p>You only can wait for the <code>Task</code> to complete, <a href="http://package.elm-lang.org/packages/elm-lang/core/3.0.0/Task#andThen">and then</a> perform another <code>Task</code>:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">andThen : Task x a -&gt; (a -&gt; Task x b) -&gt; Task x b
+</code></pre></div></li>
+<li><p>And you also can create a <code>Task</code> that will bear no side effects, and will just instantly resolve as completed and either <a href="http://package.elm-lang.org/packages/elm-lang/core/3.0.0/Task#succeed">return</a> a particular value or <a href="http://package.elm-lang.org/packages/elm-lang/core/3.0.0/Task#fail">fail</a> with an error value:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">succeed : a -&gt; Task x a
+</code></pre></div><div class="highlight"><pre><code class="language-text" data-lang="text">fail : x -&gt; Task x a
+</code></pre></div></li>
+</ul>
+
+<p>It turns out that this is enough to do all kinds of things when constructing simple or complicated task workflows. In fact, the <code>Task x a</code> type forms a <a href="http://hackage.haskell.org/package/base-4.8.2.0/docs/Prelude.html#t:Monad">monad</a>.</p>
+
+<p>But there is no way to explicitly run a task in Elm – you <a href="http://elm-lang.org/guide/reactivity#tasks">run tasks by connecting them to a port</a>. Here, the Elm runtime protects us from using tasks in an incorrect way by completely monopolizing the way they are executed.</p>
+
+<h3>Native tasks</h3>
+
+<p>Okay, let&rsquo;s now fix our code to generate random numbers inside a <code>Task</code>. Here&rsquo;s how our JavaScript code should look like:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// boilerplate</span>
+<span class="nx">Elm</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="nx">Elm</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span><span class="p">.</span><span class="nx">make</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">localRuntime</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span> <span class="o">=</span> <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span> <span class="o">||</span> <span class="p">{};</span>
+  <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span> <span class="o">=</span> <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span> <span class="o">||</span> <span class="p">{};</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span><span class="p">.</span><span class="nx">values</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span><span class="p">.</span><span class="nx">values</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="kd">var</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="nb">window</span><span class="p">.</span><span class="nx">crypto</span><span class="p">;</span>
+
+  <span class="c1">// the Task module</span>
+  <span class="kd">var</span> <span class="nx">Task</span> <span class="o">=</span> <span class="nx">Elm</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">Task</span><span class="p">.</span><span class="nx">make</span><span class="p">(</span><span class="nx">localRuntime</span><span class="p">);</span>
+
+  <span class="k">return</span> <span class="nx">localRuntime</span><span class="p">.</span><span class="nx">Native</span><span class="p">.</span><span class="nx">SecureRandom</span><span class="p">.</span><span class="nx">values</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">getRandomInt</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+      <span class="c1">// create the Task</span>
+      <span class="k">return</span> <span class="nx">Task</span><span class="p">.</span><span class="nx">asyncFunction</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// notify that our Task has completed with some result</span>
+        <span class="nx">callback</span><span class="p">(</span>
+          <span class="c1">// wrap the random int into a succeeding Task</span>
+          <span class="nx">Task</span><span class="p">.</span><span class="nx">succeed</span><span class="p">(</span>
+            <span class="c1">// generate a random int</span>
+            <span class="nx">crypto</span><span class="p">.</span><span class="nx">getRandomValues</span><span class="p">(</span><span class="k">new</span> <span class="nx">Uint32Array</span><span class="p">(</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]));</span>
+      <span class="p">});</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>We create the <code>Task</code> by calling the <code>Task.asyncFunction</code> function and giving it our worker function that will be called when it&rsquo;s time to execute the task. Our function will be given a callback, which we should call when the <code>Task</code> is complete, and we are ready to return the resulting value.</p>
+
+<p>Elm code:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">module SecureRandom where
+
+import Native.SecureRandom
+
+getRandomInt : () -&gt; Task never Int
+getRandomInt = Native.SecureRandom.getRandomInt
+</code></pre></div>
+<p>As you can see, only the type signature has changed in the Elm module.</p>
+
+<h2>Conclusion</h2>
+
+<p>I&rsquo;ve used this approach to accomplish <a href="https://github.com/blacktaxi/pwdgen-elm">secure random password generation in Elm</a>. (I know, I already <a href="http://reversemicrowave.me/blog/2013/12/19/a-password-generation-tool/">did this</a> <a href="http://reversemicrowave.me/blog/2015/04/20/js_of_ocaml-pwdgen/">twice</a>!)</p>
+
+<p>I&rsquo;ve put these Elm bindings together into a library, which you can find <a href="https://github.com/blacktaxi/elm-random-secure">here on GitHub</a>. There is a simple example of how you can use it in practice, but you can also check out the <a href="https://github.com/blacktaxi/pwdgen-elm/blob/30b96b8e49d685e3bf3842f0353c399e26fe2dc4/src/Generator.elm#L46">source code</a> of my password generation app. Hope you will find it helpful.</p>
+
+<p>As for side effect management in purely-functional languages, it may look a bit daunting in the beginning, but it definitely pays off in the long run.</p>
+
+
+        <div id="disqus_thread"></div>
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'reversemicrowave'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+    </div>
+
+    <hr/>
+    <footer class="post-footer">
+    
+    <h4>
+        No related posts.
+    </h4>
+    
+    </footer>
+<article>
+        </div>
+
+        <div class="page-footer">
+            <footer class="clearfix">
+                <div class="contacts">
+                    <a class="link-feed" href="http://reversemicrowave.me/atom.xml">Atom feed</a></br>
+                </div>
+                <div class="copyleft">
+                    Copyright © 2012-2016 Sergey Yavnyi
+                </div>
+            </footer>
+        </div>
+        </div>
+
+        <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-43760927-1', 'reversemicrowave.me');
+  ga('send', 'pageview');
+
+</script>
+        
+    </body>
+</html>

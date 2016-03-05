@@ -77,6 +77,14 @@
                             
                         
                             
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
                         <li><a href="/blog/index.html">blog</a></li>
                             
                         
@@ -159,7 +167,7 @@
     <span class="o">}</span>
 <span class="ow">and</span> <span class="c1">// ...</span>
 </code></pre></div>
-<p>While our &lsquo;player&rsquo; (the part that communicates with the server and implements the solving strategy) wasn&rsquo;t ready yet, I ran the generation to store results on disk so that we can start running as soon as the &lsquo;player&rsquo; is ready.</p>
+<p>While our &lsquo;player&rsquo; (the part that communicates with the server and implements the solving strategy) wasn&rsquo;t ready yet, I ran the generation to store results on disk so that we can start running as soon as the &#39;player&rsquo; is ready.</p>
 
 <p>Our solving strategy was as follows:</p>
 
@@ -176,13 +184,13 @@
 
 <ul>
 <li> submit a random program from our current list;</li>
-<li> if the server responds with a &lsquo;mismatch&rsquo; &ndash; go back to filtering phase.</li>
+<li> if the server responds with a &#39;mismatch&rsquo; &ndash; go back to filtering phase.</li>
 </ul></li>
 </ul>
 
 <p>At problem size 11 generation was already taking several minutes, and at size 12 we hit a brick wall &ndash; it took 30 to 50 minutes each! At this point we decided that we should start running our solver as it was 1.5 hours before the lighthing round deadline. </p>
 
-<p>We managed to solve all problems up to (and including) size 10, and about a half of 11s before the time was up. It was scary to see a &lsquo;mismatch&rsquo; for the first time, but really everything went smoothly &ndash; we didn&rsquo;t fail anything and I can&rsquo;t remember any major mishaps we&rsquo;ve had.</p>
+<p>We managed to solve all problems up to (and including) size 10, and about a half of 11s before the time was up. It was scary to see a &#39;mismatch&rsquo; for the first time, but really everything went smoothly &ndash; we didn&rsquo;t fail anything and I can&rsquo;t remember any major mishaps we&rsquo;ve had.</p>
 
 <p>After hour 24 I left the solver running for problems of size 11, and ran the generator for size 12 on another computer (so that next morning we could submit some more solutions) and went to sleep.</p>
 
@@ -248,11 +256,11 @@ I don&rsquo;t remember doing any optimizations before rebuilding.</p>
 
 <p>Many optimizations were tried out and implemented this day. Some of us worked on ways to reduce the overall amount of generated programs we get &ndash; less programs means less evaluations means faster filtering. Others tried different approaches to speed up the evaluation of a program.</p>
 
-<p>We tried out three different &lsquo;compilation&rsquo; methods (one of which was the actual compilation to .NET bytecode).</p>
+<p>We tried out three different &#39;compilation&rsquo; methods (one of which was the actual compilation to .NET bytecode).</p>
 
 <p>At first, we tried to convert our expression tree into a nested closures: this would work the same as normal expression tree walking, but only with the walking path fixed in a tree of nested closures.</p>
 
-<p>This gave us a speedup of 2x, but it still wasn&rsquo;t enough &ndash; by this time, I think, we had our first failed problem because we didn&rsquo;t make it on time. So then we tried to convert expression trees to <a href="http://en.wikipedia.org/wiki/Reverse_Polish_notation">RPN</a> and evaluate those with a &lsquo;stack machine&rsquo;.</p>
+<p>This gave us a speedup of 2x, but it still wasn&rsquo;t enough &ndash; by this time, I think, we had our first failed problem because we didn&rsquo;t make it on time. So then we tried to convert expression trees to <a href="http://en.wikipedia.org/wiki/Reverse_Polish_notation">RPN</a> and evaluate those with a &#39;stack machine&rsquo;.</p>
 
 <p>That didn&rsquo;t help much either &ndash; the speed was almost exactly the same. So the next thing to try would be to use F#&rsquo;s quotations to construct the program, and then compile it to an actual function (.NET method). I&rsquo;ve spent several hours on this, as juggling code quotations turned out to be much harder than I thought it would.</p>
 
@@ -334,7 +342,7 @@ I don&rsquo;t remember doing any optimizations before rebuilding.</p>
 
 <p>We ran out of ideas and were running out of time. Only then we realized, that the program <em>doesn&rsquo;t have</em> to be of exact length, and <em>doesn&rsquo;t have</em> to contain each operator at least once.</p>
 
-<p>So with this knowledge, our next desperate attempt would be to try and solve big problems with small programs. At first I tried to run our solver on about 20 of those manually, and most of the time it succeeded. So, we decided we should automate this and send it to battle. I should say, that by this point a &lsquo;failed&rsquo; problem was a normal thing, since we started feeling we didn&rsquo;t have anything to lose.</p>
+<p>So with this knowledge, our next desperate attempt would be to try and solve big problems with small programs. At first I tried to run our solver on about 20 of those manually, and most of the time it succeeded. So, we decided we should automate this and send it to battle. I should say, that by this point a &#39;failed&rsquo; problem was a normal thing, since we started feeling we didn&rsquo;t have anything to lose.</p>
 
 <p>I implemented a strategy like this for our solver:</p>
 
@@ -345,7 +353,7 @@ I don&rsquo;t remember doing any optimizations before rebuilding.</p>
 <li>  repeat until every problem is either solved or failed.</li>
 </ul>
 
-<p>The &lsquo;easiness&rsquo; of a problem was determined, aside from it&rsquo;s size, by the amount of operators it had, and by which operators. For example, <code>fold</code> problems were easier to solve, as there was a lot less possible combinations, because <code>fold</code> takes up a lot of program space.</p>
+<p>The &#39;easiness&rsquo; of a problem was determined, aside from it&rsquo;s size, by the amount of operators it had, and by which operators. For example, <code>fold</code> problems were easier to solve, as there was a lot less possible combinations, because <code>fold</code> takes up a lot of program space.</p>
 
 <p>I left this running on two computers and went to sleep. In the morning I checked the status, and saw a jolly good +100 points.</p>
 
@@ -384,7 +392,7 @@ I don&rsquo;t remember doing any optimizations before rebuilding.</p>
                     <a class="link-feed" href="http://reversemicrowave.me/atom.xml">Atom feed</a></br>
                 </div>
                 <div class="copyleft">
-                    Copyright © 2012-2015 Sergey Yavnyi
+                    Copyright © 2012-2016 Sergey Yavnyi
                 </div>
             </footer>
         </div>
